@@ -67,7 +67,7 @@ We will automatically copy your repository after each homework deadline. **You d
 
 ### Getting new homework assignments
 
-When we release a new assignment we will simply add it to the [homework github repository](https://github.com/CS171/2015-cs171-homework).
+When we release a new assignment we will simply add it to the [mandatory github repository](https://github.com/uit-inf-3200/mandatory/).
 
 To get the latest homework assignments and potential updates or corrections to the assignment, run the following.
 
