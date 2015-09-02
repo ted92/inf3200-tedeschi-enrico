@@ -30,7 +30,7 @@ Then `cd` into the newly created `mandatory/` directory.  You can change the dir
 
 Create a new repository on the Github website following the `inf3200-lastname-firstname` naming convention. **Use all lowercase for your repository name. It is important that your repository be named exactly as above so that we can access it for grading.**
 
-Ensure your new repository is private and don't click the option to "Initialize the repository with a README".
+Don't click the option to "Initialize the repository with a README".
 
 Unless you know what you're doing, select HTTPS.
 
@@ -40,7 +40,7 @@ Run the two commands described on GitHub under the heading "Push an existing rep
 
 ![Setting up your Github repository](images/commands.png?raw=true)
 
-On GitHub, go to the repository settings and navigate to the Collaborators page. Add [`assignman3200`](https://github.com/assignman3200) as a collaborator to your private repository.
+On GitHub, go to the repository settings and navigate to the Collaborators page. Add [`assignman3200`](https://github.com/assignman3200) as a collaborator to your repository.
 
 Now your homework repository is all set!
 
