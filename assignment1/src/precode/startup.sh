@@ -23,8 +23,7 @@ done
 # Wait/Run benchmarks
 HEALTY=1
 while [ $HEALTY -eq 1  ]; do 
-  sleep 3
-  break
+  sleep 1
   echo "Checking if each node is alive and well..."
   for node in "${nodes[@]}"
   do
