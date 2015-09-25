@@ -23,8 +23,9 @@ done
 
 # Wait/Run benchmarks
 HEALTY=1
-while [ $HEALTY -eq 1  ]; do 
-  sleep 1
+QUIT=0
+SLEEP_SECONDS=2
+while [ $HEALTY -eq 1 ] && [ $QUIT -eq 0 ]; do
   echo "Checking if each node is alive and well..."
   for node in "${nodes[@]}"
   do
@@ -36,6 +37,16 @@ while [ $HEALTY -eq 1  ]; do
       let HEALTY=0
     fi
   done
+
+  if [ $HEALTY -eq 1 ]
+  then
+    read -t $SLEEP_SECONDS -p "Sleeping $SLEEP_SECONDS seconds. Press ENTER to shutdown." \
+      && echo "Caught ENTER. Shutting down..." \
+      && let QUIT=1
+    echo
+  else
+    echo "Cluster is no longer healthy. Shutting down..."
+  fi
 done
 
 # Stop 
