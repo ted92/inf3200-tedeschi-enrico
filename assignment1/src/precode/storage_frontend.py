@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set sts=8 sw=8 noet:
 
 import BaseHTTPServer
 import sys

@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set sts=4 sw=4 et:
 
 import time
 
