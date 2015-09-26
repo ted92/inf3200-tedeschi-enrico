@@ -3,9 +3,11 @@
 
 import time
 
-print "Hello World!"
+class Node:
+    def __init__(self):
+        print("Node initialized")
 
-class Process:
+class NodeServer:
     def __init__(self):
         self.counter = 0
 
@@ -17,5 +19,5 @@ class Process:
 
 
 if __name__ == '__main__':
-    proc = Process()
-    proc.run()
+    server = NodeServer()
+    server.run()
