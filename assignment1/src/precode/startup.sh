@@ -6,16 +6,20 @@ directory=`pwd` #current working directory
 executable="node.py";
 
 # Lists of nodes
-nodes=( "compute-1-1" "compute-1-2" "compute-1-3")
+nodes=$(rocks list host | grep compute | cut -d" " -f1 | sed 's/.$//' | shuf | head -n $1)
+
+echo "Nodes:"
+echo $nodes
+
 
 # Stop any running processes
-for node in "${nodes[@]}"
+for node in $nodes
 do
   ssh $node bash -c "'pgrep -f '$directory/$executable' | xargs kill'"
 done
 
 # Boot all processes
-for node in "${nodes[@]}"
+for node in $nodes
 do
   echo "Booting node" $node
   nohup ssh $node bash -c "'python $directory/$executable'"  > /dev/null 2>&1 &
@@ -27,7 +31,7 @@ QUIT=0
 SLEEP_SECONDS=2
 while [ $HEALTY -eq 1 ] && [ $QUIT -eq 0 ]; do
   echo "Checking if each node is alive and well..."
-  for node in "${nodes[@]}"
+  for node in $nodes
   do
     if ssh -q $node ps aux | grep $executable > /dev/null 2>&1 ;
     then
@@ -50,7 +54,7 @@ while [ $HEALTY -eq 1 ] && [ $QUIT -eq 0 ]; do
 done
 
 # Stop 
-for node in "${nodes[@]}"
+for node in $nodes
 do
   ssh $node bash -c "'pgrep -f '$directory/$executable' | xargs kill'"
   if ssh -q $node ps aux | grep $executable > /dev/null 2>&1 ;
