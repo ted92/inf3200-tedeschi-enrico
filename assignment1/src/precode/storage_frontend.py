@@ -17,6 +17,9 @@ MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
 storageBackendNodes = list()
 httpdServeRequests = True
 
+node_httpserver_port = 8000
+
+
 class StorageServerFrontend:
 	
 	def __init__(self):
@@ -25,23 +28,20 @@ class StorageServerFrontend:
 	
 	def sendGET(self, key):
 		node = random.choice(storageBackendNodes)
-		
-		#	TODO:
-		# 	Send a GET request to the node for the give key
-		#	return the data
-		
-		# (Remove this) Returns the value given the key
-		return self.map.get(key)
+
+		conn = httplib.HTTPConnection(node, node_httpserver_port)
+		conn.request("GET", "/%s" % key)
+		response = conn.getresponse()
+		data = response.read()
+
+		return data
 		
 	def sendPUT(self, key, value, size):
 		self.size = self.size + size
 		node = random.choice(storageBackendNodes)
 
-		#	TODO:
-		# 	Send a PUT request to the node with the key/value pair
-		
-		# (Remove this) Stores the key/value pair
-		self.map[key] = value
+		conn = httplib.HTTPConnection(node, node_httpserver_port)
+		conn.request("PUT", "/%s" % key, value)
 
 
 class FrontendHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
