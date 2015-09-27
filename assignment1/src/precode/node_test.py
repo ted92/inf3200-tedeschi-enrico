@@ -6,15 +6,21 @@ import node
 
 class TestNode(unittest.TestCase):
 
-    def test_process(self):
+    def test_put_value_get_value(self):
         nodeObj = node.Node()
-        self.assertTrue(isinstance(nodeObj, node.Node))
+        key = "hello_world"
+        value = "Hello world!"
+        nodeObj.put_value(key, value, len(value))
+        retrieved = nodeObj.get_value(key)
+        self.assertEqual(retrieved, value)
 
-class TestNodeServer(unittest.TestCase):
+    def test_size(self):
+        nodeObj = node.Node()
+        key = "hello_world"
+        value = "Hello world!"
+        nodeObj.put_value(key, value, len(value))
+        self.assertEqual(nodeObj.size, len(value))
 
-    def test_server_startup(self):
-        server = node.NodeServer()
-        self.assertTrue(isinstance(server, node.NodeServer))
 
 if __name__ == '__main__':
     unittest.main()
