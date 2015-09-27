@@ -1,12 +1,29 @@
 #!/bin/bash          
 # vim: set sts=2 sw=2 et:
 
+num_hosts=$1
+
+if [ -z "$num_hosts" ]
+then
+  let num_hosts=3
+  cat <<-EOF
+
+	Using default of $num_hosts random hosts.
+	Use a numerical argument to change the number of hosts.
+
+	For example:
+	    $(basename $0) 6
+
+
+	EOF
+fi
+
 # Executable
 directory=`pwd` #current working directory
 executable="node.py";
 
 # Lists of nodes
-nodes=$(rocks list host | grep compute | cut -d" " -f1 | sed 's/.$//' | shuf | head -n $1)
+nodes=$(rocks list host | grep compute | cut -d" " -f1 | sed 's/.$//' | shuf | head -n "$num_hosts")
 
 echo "Nodes:"
 echo $nodes
