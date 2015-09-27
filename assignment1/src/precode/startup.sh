@@ -42,6 +42,10 @@ do
   nohup ssh $node bash -c "'python $directory/$executable'"  > /dev/null 2>&1 &
 done
 
+# Run tests
+sleep 2
+python storage_frontend.py --runtests $nodes
+
 # Wait/Run benchmarks
 HEALTY=1
 QUIT=0
