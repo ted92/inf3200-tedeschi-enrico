@@ -15,7 +15,7 @@ END
 for (( rank=0 ; rank < num_nodes; rank++ ))
 do
     current=${nodes_array[$rank]}
-    if [ $rank -eq $num_nodes ]
+    if [ $rank -ne $num_nodes ]
     then next=${nodes_array[rank+1]}
     else next=${nodes_array[0]}
     fi
