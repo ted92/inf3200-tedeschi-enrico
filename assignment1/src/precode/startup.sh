@@ -25,6 +25,9 @@ executable="node.py";
 # Lists of nodes
 nodes=$(rocks list host | grep compute | cut -d" " -f1 | sed 's/.$//' | shuf | head -n "$num_hosts")
 
+#put the output into an array
+nodes_array=($nodes)
+
 echo "Nodes:"
 echo $nodes
 
@@ -36,15 +39,18 @@ do
 done
 
 # Boot all processes
-rank = 0
-for node in $nodes
+for ((rank = 0; rank < num_hosts; rank++))
 do
-  echo "Booting node" $node
-  # TODO: pass in: total number of nodes (num_host), rank of this node, name of next node
-  # TODO: define rank, define next_node
-  nohup ssh $node bash -c "'python $directory/$executable $num_hosts $rank $next_node'"  > /dev/null 2>&1 &
+  echo "Booting node" ${nodes_array[$rank]}
+  # set the current node and the next node
+  current=${nodes_array[$rank]}
+  if [ $rank -ne $num_hosts ]
+  then next_node=${nodes_array[rank+1]}
+  else next_node=${nodes_array[0]}
+  fi
+  nohup ssh $current bash -c "'python $directory/$executable $num_hosts $rank $next_node'"  > /dev/null 2>&1 &
   #increment the rank to send in each node with 'let'
-  let rank = rank + 1
+  echo "$rank $current          $next"
 done
 
 # Run tests
