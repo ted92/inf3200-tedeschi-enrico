@@ -44,13 +44,15 @@ do
   echo "Booting node" ${nodes_array[$rank]}
   # set the current node and the next node
   current=${nodes_array[$rank]}
-  if [ $rank -ne $num_hosts ]
+  if [ $rank -ne $((num_hosts-1)) ]
   then next_node=${nodes_array[rank+1]}
   else next_node=${nodes_array[0]}
   fi
+  
+  #give the parameter to node.py
   nohup ssh $current bash -c "'python $directory/$executable $num_hosts $rank $next_node'"  > /dev/null 2>&1 &
   #increment the rank to send in each node with 'let'
-  echo "$rank $current          $next"
+  echo "$rank $current          $next_node"
 done
 
 # Run tests
