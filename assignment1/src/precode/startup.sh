@@ -36,11 +36,15 @@ do
 done
 
 # Boot all processes
+rank = 0
 for node in $nodes
 do
   echo "Booting node" $node
-  # TODO: pass in: total number of nodes, rank of this node, name of next node
-  nohup ssh $node bash -c "'python $directory/$executable'"  > /dev/null 2>&1 &
+  # TODO: pass in: total number of nodes (num_host), rank of this node, name of next node
+  # TODO: define rank, define next_node
+  nohup ssh $node bash -c "'python $directory/$executable $num_hosts $rank $next_node'"  > /dev/null 2>&1 &
+  #increment the rank to send in each node with 'let'
+  let rank = rank + 1
 done
 
 # Run tests
