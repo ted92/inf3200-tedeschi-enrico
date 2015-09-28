@@ -34,6 +34,9 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         key = self.path
 
         # TODO: distributed stores
+        #   Divide key space.
+        #   If this node is responsible for key, give response.
+        #   If not, query next node.
         value = node.get_value(key)
 
         if value is None:
@@ -56,6 +59,9 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         # TODO: distributed stores
+        #   Divide key space.
+        #   If this node is responsible for key, give response.
+        #   If not, query next node.
         node.put_value(self.path, self.rfile.read(contentLength), contentLength)
 
         self.send_response(200)
@@ -100,6 +106,8 @@ if __name__ == '__main__':
     httpserver_port = 8000
 
     # Start the webserver which handles incomming requests
+    # TODO: accept parameters from command line:
+    #   total number of nodes, rank of this node, name of next node
     try:
         print "Starting HTTP server on port %d" % httpserver_port
         httpd = NodeServer(("",httpserver_port), NodeHttpHandler)

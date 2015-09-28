@@ -39,6 +39,7 @@ done
 for node in $nodes
 do
   echo "Booting node" $node
+  # TODO: pass in: total number of nodes, rank of this node, name of next node
   nohup ssh $node bash -c "'python $directory/$executable'"  > /dev/null 2>&1 &
 done
 
