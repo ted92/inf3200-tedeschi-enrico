@@ -50,7 +50,7 @@ do
   fi
   
   #give the parameter to node.py
-  nohup ssh $current bash -c "'python $directory/$executable $num_hosts $rank $next_node'"  > /dev/null 2>&1 &
+  nohup ssh $current bash -c "'python $directory/$executable $num_hosts $rank $next_node'" 2>&1 | sed "s/^/$node: /" &
   #increment the rank to send in each node with 'let'
   echo "$rank $current          $next_node"
 done
