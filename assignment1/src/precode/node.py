@@ -27,6 +27,11 @@ class Node:
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
+    # TODO: call node funtion with the parameters from the shell
+    optlist = getopt.getopt(sys.argv[1:])
+    print "OPERATIONS:"
+    for opt in optlist:
+        print opt
     node = Node()
 
     # Returns the
