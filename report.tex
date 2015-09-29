@@ -68,6 +68,9 @@ Our task was to implement a simple distributed key-value store.
 
 \subsection{Requirements}
 
+% TODO: Multiple nodes.
+% TODO: Frontend node connects randomly.
+
 \if 0
 
 \begin{itemize} 
@@ -110,8 +113,16 @@ can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
 
 \section{Design}
 
+% TODO: Chord's one-dimensional key-space, without finger tables.
+% TODO: Nodes fixed, so key space divided evenly.
+% TODO: How to block. Synchronous at first.
+
 
 \section{Implementation}
+
+% TODO: Existing frontend in Python
+% TODO: Shell script to start
+% TODO: HTTP API
 
 \if
 Implemented on the file \textit{startup.sh} the possibility to choose with a given argument how many nodes to run. Since the Linux's bash works as a pipeline, each command has been given using the input of the output of the previous one, and at the end it gets the random nodes on the cluster according to a number given in input while executing the script.
@@ -130,17 +141,24 @@ head -n "$num_hosts")
 
 \section{Discussion}
 
+% TODO: O(n) lookup.
+% TODO: Finger tables O(log n)
+
 
 
 \section{Evaluation}
 
+% TODO: time actual implementation
 
 
 \section{Conclusion}
 
+% TODO: Conclusion
+
 
 \section{CITATION PLACEHOLDER}
 
+% TODO: Remove section
 This text is only here to hang some citations before they're used in the real
 text.
 \cite{linuxjournal_dht}
