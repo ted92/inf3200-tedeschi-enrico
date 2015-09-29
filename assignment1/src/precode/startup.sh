@@ -50,14 +50,14 @@ do
   fi
   
   #give the parameter to node.py
-  nohup ssh $current bash -c "'python $directory/$executable $num_hosts $rank $next_node'" 2>&1 | sed "s/^/$node: /" &
+  nohup ssh $current bash -c "'python -u $directory/$executable $num_hosts $rank $next_node'" 2>&1 | sed "s/^/$current: /" &
   #increment the rank to send in each node with 'let'
-  echo "$rank $current          $next_node"
+  echo "$rank $current   next: $next_node"
 done
 
 # Run tests
 sleep 2
-python storage_frontend.py --runtests $nodes
+#python storage_frontend.py --runtests $nodes
 
 # Wait/Run benchmarks
 HEALTY=1

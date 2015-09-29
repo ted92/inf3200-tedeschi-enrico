@@ -5,6 +5,9 @@ import BaseHTTPServer
 import time
 import threading
 import signal
+import sys
+import os
+import getopt
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
@@ -28,10 +31,8 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
     # TODO: call node funtion with the parameters from the shell
-    optlist = getopt.getopt(sys.argv[1:])
-    print "OPERATIONS:"
-    for opt in optlist:
-        print opt
+    for arg in sys.argv:
+        print arg
     node = Node()
 
     # Returns the
