@@ -96,9 +96,6 @@ Our task was to implement a simple distributed key-value store.
 
 \fi
 
-
-\section{Analysis}
-
 \if 0
 The interesting thing about DHTs is that storage and lookups are distributed among multiple machines \cite{linuxjournal_dht}
 Chord is an efficient distributed lookup system based on consistent hashing. It provides a
@@ -109,6 +106,9 @@ Chord network. Adding or removing a server from the network
 can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
 \cite{chord}
 \fi
+
+
+\section{Design}
 
 
 \section{Implementation}
@@ -126,17 +126,13 @@ head -n "$num_hosts")
 \end{lstlisting}
 \fi
 
-\subsection{Design and Main Schema}
-
-\subsection{Environment}
-
-
-
-\section{Result and Benchmarking}
-
 
 
 \section{Discussion}
+
+
+
+\section{Evaluation}
 
 
 
