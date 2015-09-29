@@ -1,0 +1,173 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% BEGIN HEADERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[11pt,conference]{IEEEtran}
+
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{natbib}
+
+% Your names in the header
+\pagestyle{fancy}
+\rhead{Enrico Tedeschi}
+\lhead{INF-3200 Distributed Systems - Assignment 1}
+\cfoot{\thepage}
+
+% Used for including code in a stylized manner
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+% The Title
+\title{UiT INF-3200 Distributed Systems - Project 1\\Fall 2015}
+
+% Your name and email
+\author{Enrico Tedeschi\\ete011@post.uit.no
+    \and Mike Murphy\\mmu019@post.uit.no}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END HEADERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+% Create the title and everything
+\maketitle
+
+
+\section{Introduction}
+
+Our task was to implement a simple distributed key-value store.
+
+
+\subsection{Requirements}
+
+% TODO: Multiple nodes.
+% TODO: Frontend node connects randomly.
+
+\if 0
+
+\begin{itemize} 
+\item Design and implement a distributed key-value storage system
+\item Run the system on the uvocks cluster (urocks.cs.uit.no)
+\end{itemize}
+
+\fi
+
+
+\section{Technical Background}
+
+\if 0
+
+\begin{itemize} 
+\item[--] Distributed systems concept
+\item[--] Basic programming approach
+\item[--] Knowledge of Python language
+\item[--] Notion of design pattern principles
+\item[--] Theory about software engineering
+\item[--] Knowledge of git to manage the software versions
+\item[--] Notion of Chord architecture
+\item[--] Knowledge of programming with API in Python
+\item[--] Basic approach to Linux command line principles
+\end{itemize}
+
+\fi
+
+\if 0
+The interesting thing about DHTs is that storage and lookups are distributed among multiple machines \cite{linuxjournal_dht}
+Chord is an efficient distributed lookup system based on consistent hashing. It provides a
+unique mapping between an identifier space and a set of nodes \cite{chord}
+\newline
+Chord is efficient: determining the successor of an identifier requires that $O(log N)$ messages be exchanged with high probability where $N$ is the number of servers in the
+Chord network. Adding or removing a server from the network
+can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
+\cite{chord}
+\fi
+
+
+\section{Design}
+
+% TODO: Chord's one-dimensional key-space, without finger tables.
+% TODO: Nodes fixed, so key space divided evenly.
+% TODO: How to block. Synchronous at first.
+
+
+\section{Implementation}
+
+% TODO: Existing frontend in Python
+% TODO: Shell script to start
+% TODO: HTTP API
+
+\if
+Implemented on the file \textit{startup.sh} the possibility to choose with a given argument how many nodes to run. Since the Linux's bash works as a pipeline, each command has been given using the input of the output of the previous one, and at the end it gets the random nodes on the cluster according to a number given in input while executing the script.
+\begin{lstlisting}
+nodes = 
+$(rocks list host |
+grep compute |
+cut -d" " -f1 |
+sed 's/.$//' |
+shuf |
+head -n "$num_hosts")
+\end{lstlisting}
+\fi
+
+
+
+\section{Discussion}
+
+% TODO: O(n) lookup.
+% TODO: Finger tables O(log n)
+
+
+
+\section{Evaluation}
+
+% TODO: time actual implementation
+
+
+\section{Conclusion}
+
+% TODO: Conclusion
+
+
+\section{CITATION PLACEHOLDER}
+
+% TODO: Remove section
+This text is only here to hang some citations before they're used in the real
+text.
+\cite{linuxjournal_dht}
+\cite{chord}
+\cite{parallel}
+
+
+\bibliographystyle{plain}
+\bibliography{report}
+
+
+\end{document}
