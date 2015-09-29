@@ -63,14 +63,24 @@
 
 \section{Introduction}
 
+Our task was to implement a simple distributed key-value store.
+
+
 \subsection{Requirements}
+
+\if 0
+
 \begin{itemize} 
 \item Design and implement a distributed key-value storage system
 \item Run the system on the uvocks cluster (urocks.cs.uit.no)
 \end{itemize}
 
+\fi
+
 
 \section{Technical Background}
+
+\if 0
 
 \begin{itemize} 
 \item[--] Distributed systems concept
@@ -84,8 +94,12 @@
 \item[--] Basic approach to Linux command line principles
 \end{itemize}
 
+\fi
+
 
 \section{Analysis}
+
+\if 0
 The interesting thing about DHTs is that storage and lookups are distributed among multiple machines \cite{linuxjournal_dht}
 Chord is an efficient distributed lookup system based on consistent hashing. It provides a
 unique mapping between an identifier space and a set of nodes \cite{citation2}
@@ -93,9 +107,12 @@ unique mapping between an identifier space and a set of nodes \cite{citation2}
 Chord is efficient: determining the successor of an identifier requires that $O(log N)$ messages be exchanged with high probability where $N$ is the number of servers in the
 Chord network. Adding or removing a server from the network
 can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages. \cite{citation2}
+\fi
 
 
 \section{Implementation}
+
+\if
 Implemented on the file \textit{startup.sh} the possibility to choose with a given argument how many nodes to run. Since the Linux's bash works as a pipeline, each command has been given using the input of the output of the previous one, and at the end it gets the random nodes on the cluster according to a number given in input while executing the script.
 \begin{lstlisting}
 nodes = 
@@ -106,17 +123,37 @@ sed 's/.$//' |
 shuf |
 head -n "$num_hosts")
 \end{lstlisting}
+\fi
+
 \subsection{Design and Main Schema}
 
 \subsection{Environment}
+
+
+
 \section{Result and Benchmarking}
+
+
+
 \section{Discussion}
 
+
+
 \section{Conclusion}
+
+
+\section{CITATION PLACEHOLDER}
+
+This text is only here to hang some citations before they're used in the real
+text.
+\cite{linuxjournal_dht}
+\cite{citation2}
+\cite{citation3}
+\cite{citation4}
+
 
 \bibliographystyle{plain}
 \bibliography{report}
 
 
 \end{document}
-
