@@ -31,8 +31,10 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
     # TODO: call node funtion with the parameters from the shell
+    i = 0
     for arg in sys.argv:
-        print arg
+        print sys.argv[i]
+        i = i + 1
     node = Node()
 
     # Returns the
