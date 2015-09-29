@@ -8,15 +8,19 @@ import signal
 import sys
 import os
 import getopt
+import md5
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
 
 class Node:
 
-    def __init__(self):
+    def __init__(self, num_hosts, rank, next_node):
         self.map = dict()
         self.size = 0
+        self.num_hosts = num_hosts
+        self.rank = rank
+        self.next_node = next_node
 
     def get_value(self, key):
         return self.map.get(key)
@@ -25,28 +29,36 @@ class Node:
         self.size = self.size + size
         self.map[key] = value
 
+    def get_num_hosts(self):
+        return self.num_hosts
+
+    def get_rank(self):
+        return self.rank
+
+    def get_next_node(self):
+        return self.next_node
 
 
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
-    # TODO: call node funtion with the parameters from the shell
-    i = 0
-    for arg in sys.argv:
-        print sys.argv[i]
-        i = i + 1
-    node = Node()
+    # sys.argv[0] --> num_hosts
+    # sys.argv[1] --> rank
+    # sys.argv[2] --> next_node
+    node = Node(sys.argv[0], sys.argv[1], sys.argv[2])
 
     # Returns the
     def do_GET(self):
         key = self.path
 
         # TODO: distributed stores
-        #   Divide key space.
+        #   Divide key space --> hashed_node = md5(key) % number_of_nodes
         #   If this node is responsible for key, give response.
         #   If not, query next node.
+
         value = node.get_value(key)
 
+        # if key not found, forward the request to the next node
         if value is None:
             self.sendErrorResponse(404, "Key not found")
             return
