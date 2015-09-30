@@ -40,12 +40,21 @@ class Node:
     def get_next_node(self):
         return self.next_node
 
-    # to PUT a hash value in the next node
+    # to PUT an hash value in the next node
     def sendPUT(self, key, value):
 		node = self.next_node;
 		conn = httplib.HTTPConnection(node, node_httpserver_port)
 		conn.request("PUT", "/%s" % key, value)
 
+    # to GET an hash value from the next node
+    def sendGET(self, key):
+		node = self.next_node
+		conn = httplib.HTTPConnection(node, node_httpserver_port)
+		conn.request("GET", "/%s" % key)
+		response = conn.getresponse()
+		data = response.read()
+
+		return data
 
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -86,12 +95,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.sendErrorResponse(400, "Content body to large")
             return
 
-        # TODO: distributed stores
-        #   Divide key space.
-        #   If this node is responsible for key, give response.
-        #   If not, query next node.
-
-        # TODO: put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
+        # put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
         if (node.rank == md5(self.path) % node.num_hosts):
             # if is the right node, then save the data in the map
             node.put_value(self.path, self.rfile.read(contentLength), contentLength)
@@ -100,12 +104,8 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
         else:
-            # TODO : call the next node, manage it with a method: send_PUT
             # otherwise call the next node
-        
             node.sendPUT(self.path, self.rfile.read(contentLength))
-
-
 
     def sendErrorResponse(self, code, msg):
         self.send_response(code)
