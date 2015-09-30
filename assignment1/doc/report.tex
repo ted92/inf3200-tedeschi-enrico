@@ -128,12 +128,12 @@ can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
 Implemented on the file \textit{startup.sh} the possibility to choose with a given argument how many nodes to run. Since the Linux's bash works as a pipeline, each command has been given using the input of the output of the previous one, and at the end it gets the random nodes on the cluster according to a number given in input while executing the script.
 \begin{lstlisting}
 nodes = 
-$(rocks list host |
+\$(rocks list host |
 grep compute |
 cut -d" " -f1 |
-sed 's/.$//' |
+sed 's/.\$//' |
 shuf |
-head -n "$num_hosts")
+head -n "\$num_hosts")
 \end{lstlisting}
 \fi
 
