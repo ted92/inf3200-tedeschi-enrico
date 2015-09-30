@@ -13,6 +13,8 @@ import md5
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
 
+node_httpserver_port = 8000
+
 class Node:
 
     def __init__(self, num_hosts, rank, next_node):
@@ -38,6 +40,12 @@ class Node:
     def get_next_node(self):
         return self.next_node
 
+    # to PUT a hash value in the next node
+    def sendPUT(self, key, value):
+		node = self.next_node;
+		conn = httplib.HTTPConnection(node, node_httpserver_port)
+		conn.request("PUT", "/%s" % key, value)
+
 
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -47,7 +55,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # sys.argv[2] --> next_node
     node = Node(sys.argv[0], sys.argv[1], sys.argv[2])
 
-    # Returns the
+    # Insert the key
     def do_GET(self):
         key = self.path
 
@@ -82,11 +90,22 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         #   Divide key space.
         #   If this node is responsible for key, give response.
         #   If not, query next node.
-        node.put_value(self.path, self.rfile.read(contentLength), contentLength)
 
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
+        # TODO: put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
+        if (node.rank == md5(self.path) % node.num_hosts):
+            # if is the right node, then save the data in the map
+            node.put_value(self.path, self.rfile.read(contentLength), contentLength)
+            print "value saved in rank: ", node.rank, " with md5(key) value: ", (md5(self.path) % node.num_hosts)
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+        else:
+            # TODO : call the next node, manage it with a method: send_PUT
+            # otherwise call the next node
+        
+            node.sendPUT(self.path, self.rfile.read(contentLength))
+
+
 
     def sendErrorResponse(self, code, msg):
         self.send_response(code)
