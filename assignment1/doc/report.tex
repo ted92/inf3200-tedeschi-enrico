@@ -176,6 +176,13 @@ implement any kind of data persistence. Data is simply stored in memory and the
 store starts empty on each test run.
 
 
+\subsection{Environment}
+
+Our code was written to run on the Rocks Cluster distribution\cite{rocks}, and
+makes some assumptions about that environment. We rely on the cluster's shared
+filesystem for distributing program code to servers. And we rely on easy SSH
+access between machines in the cluster to start and shutdown nodes.
+
 
 \section{Discussion}
 
