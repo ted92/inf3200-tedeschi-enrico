@@ -118,12 +118,12 @@ can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
 
 We divided our key space in the same manner as Chord\cite{chord}: we arranged
 the keys along one dimension and in a ring, with each node storing keys in an
-assigned portion of the key space. Because all nodes are known ahead of time, we
-divided the key space equally between them.
+assigned portion of the key space. Because all nodes are known ahead of time,
+with no joining or leaving, we could divide the key space equally between them.
 
-We did not implement Chord's finger tables, which is what allows Chord to do
-lookups in $O(log n)$ time. Without finger tables, our nodes can only pass
-requests to their immediate successor, so requests take $O(n)$ time.
+We did not implement Chord's finger tables optimization, which is what allows
+Chord to do lookups in $O(\log n)$ time. Without finger tables, our nodes can
+only pass requests to their immediate successor, so requests take $O(n)$ time.
 
 For forwarding requests to successor nodes, we used the simple synchronous
 strategy: the node's request-handler thread will block while it contacts the
@@ -151,11 +151,10 @@ and Magnus Stenhaug, which included the front-end code and the startup/shutdown
 shell script. Their front-end also included an automated test routine that
 rapidly inserted and retrieved random key-value pairs.
 
-We wrote the actual storage node code, and also made a few enhancements to the
-shell script. The largest startup script change is that we had it pick random
-cluster machines to use as nodes, so that we did not occupy too much time on any
-particular machines, and so others' work on particular machines would be less
-likely to interfere with our performance.
+We wrote the actual storage node code, and we also made a few enhancements to
+the startup shell script. We modified the startup script to pick a randomized
+set of computers from the cluster for each test run. This randomization was to
+prevent our test runs from occupying too much time on any particular machines.
 
 
 \subsection{Network Protocol}
