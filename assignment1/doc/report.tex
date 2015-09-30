@@ -113,10 +113,24 @@ can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
 
 \section{Design}
 
-% TODO: Chord's one-dimensional key-space, without finger tables.
-% TODO: Nodes fixed, so key space divided evenly.
-% TODO: How to block. Synchronous at first.
+We divided our key space in the same manner as Chord: we arranged the keys along
+one dimension and in a ring, with each node storing keys in an assigned portion
+of the key space. Because all nodes were known ahead of time, we divided the key
+space equally between them.
 
+We did not implement Chord's finger tables, which is what allows Chord to do
+lookups in $O(log n)$ time. Without finger tables, our nodes can only pass
+requests to their immediate successor, so requests take $O(n)$ time.
+
+For forwarding requests to successor nodes, we used the simple synchronous
+strategy: the node's request-handler thread will block while it contacts the
+next node. This was the easiest to implement, but every request leaves a chain
+of open connections and blocked threads around the ring of nodes. This strategy
+is easy to implement but it will not scale well. An asynchronous messaging
+system would allow nodes to close connections and free resources as a request
+propagated around the ring.
+
+% TODO: Illustrations
 
 \section{Implementation}
 
