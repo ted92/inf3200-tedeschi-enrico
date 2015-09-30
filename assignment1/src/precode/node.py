@@ -68,25 +68,27 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         key = self.path
 
-        # TODO: distributed stores
-        #   Divide key space --> hashed_node = md5(key) % number_of_nodes
-        #   If this node is responsible for key, give response.
-        #   If not, query next node.
+        # if is the right node then check if the key exists
+        if(node.rank == md5(self.path) % node.num_hosts):
+            value = node.get_value(key)
 
-        value = node.get_value(key)
+            #if the key doesn't exist then return 404
+            if value is None:
+                self.sendErrorResponse(404, "Key not found")
+                return
 
-        # if key not found, forward the request to the next node
-        if value is None:
-            self.sendErrorResponse(404, "Key not found")
-            return
+            # Write header
+            self.send_response(200)
+            self.send_header("Content-type", "application/octet-stream")
+            self.end_headers()
 
-        # Write header
-        self.send_response(200)
-        self.send_header("Content-type", "application/octet-stream")
-        self.end_headers()
 
-        # Write Body
-        self.wfile.write(value)
+            # Write Body
+            self.wfile.write(value)
+
+        else:
+            # forward the get request to the next node
+            node.sendGET(self.path)
 
     def do_PUT(self):
         contentLength = int(self.headers['Content-Length'])
