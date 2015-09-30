@@ -65,20 +65,23 @@
 
 Our task was to implement a simple distributed key-value store.
 
+The general idea is to have a number of back-end nodes that store data, and a
+front-end node that forwards requests into the back-end group. The front-end
+should be able to contact any storage node and get the same results.
+
 
 \subsection{Requirements}
 
-% TODO: Multiple nodes.
-% TODO: Frontend node connects randomly.
+Our data store \ldots
 
-\if 0
-
-\begin{itemize} 
-\item Design and implement a distributed key-value storage system
-\item Run the system on the uvocks cluster (urocks.cs.uit.no)
+\begin{itemize}
+\item must incorporate multiple storage nodes.
+\item must work without any node having complete knowledge of the others.
+\item must work no matter which storage node the front-end contacts. For
+    testing, the front-end should contact random nodes.
+\item does not need to support dynamic adding and removal of storage nodes.
+\item does not need to persist data between runs.
 \end{itemize}
-
-\fi
 
 
 \section{Technical Background}
