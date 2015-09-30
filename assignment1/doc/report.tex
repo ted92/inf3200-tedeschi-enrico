@@ -132,24 +132,45 @@ propagated around the ring.
 
 % TODO: Illustrations
 
+
+
 \section{Implementation}
 
-% TODO: Existing frontend in Python
-% TODO: Shell script to start
-% TODO: HTTP API
 
-\if
-Implemented on the file \textit{startup.sh} the possibility to choose with a given argument how many nodes to run. Since the Linux's bash works as a pipeline, each command has been given using the input of the output of the previous one, and at the end it gets the random nodes on the cluster according to a number given in input while executing the script.
-\begin{lstlisting}
-nodes = 
-\$(rocks list host |
-grep compute |
-cut -d" " -f1 |
-sed 's/.\$//' |
-shuf |
-head -n "\$num_hosts")
-\end{lstlisting}
-\fi
+\subsection{Languages and Code}
+
+Our solution is implemented in a mix of Python and shell script, Python for the
+actual node and front-end programs, and a shell script to start up and shut down
+nodes via SSH.
+
+We started with skeleton code by our teaching assistants, Einar Holsbø Jakobsen
+and Magnus Stenhaug, which included the front-end code and the startup/shutdown
+shell script. Their front-end also included an automated test routine that
+rapidly inserted and retrieved random key-value pairs.
+
+We wrote the actual storage node code, and also made a few enhancements to the
+shell script. The largest startup script change is that we had it pick random
+cluster machines to use as nodes, so that we did not occupy too much time on any
+particular machines, and so others' work on particular machines would be less
+likely to interfere with our performance.
+
+
+\subsection{Network Protocol}
+
+The backend nodes accept and retrieve data through a simple HTTP API. HTTP's PUT
+and GET operations are a natural fit for a key-value store, as their semantics
+specify storing and retrieving documents (value) at a given URL path (key).
+Jakobsen and Stenhaug chose this protocol for their starter front-end node and
+we expanded it to the storage nodes.
+
+
+\subsection{Persistence}
+
+The purpose of this exercise was to investigate the challenges of distributed
+data storage, not storage itself. Therefore, there was no requirement to
+actually persist stored data between runs. So, for simplicity, we did not
+implement any kind of data persistence. Data is simply stored in memory and the
+store starts empty on each test run.
 
 
 
