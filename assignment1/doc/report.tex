@@ -128,10 +128,10 @@ requests to their immediate successor, so requests take $O(n)$ time.
 For forwarding requests to successor nodes, we used the simple synchronous
 strategy: the node's request-handler thread will block while it contacts the
 next node. This was the easiest to implement, but every request leaves a chain
-of open connections and blocked threads around the ring of nodes. This strategy
-is easy to implement but it will not scale well. An asynchronous messaging
-system would allow nodes to close connections and free resources as a request
-propagated around the ring.
+of open connections and blocked threads around the ring of nodes, which will
+become a problem as the number of machines or frequency of requests grows. An
+asynchronous messaging system would allow nodes to close connections and free
+resources as a request propagated around the ring.
 
 % TODO: Illustrations
 
