@@ -110,7 +110,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if (node.rank == key_md5 % node.num_hosts):
             # if is the right node, then save the data in the map
             node.put_value(key, self.rfile.read(contentLength), contentLength)
-            print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_md5 % node.num_hosts)
+            # print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_md5 % node.num_hosts)
             self.send_response(200)
             # self.send_header("Content-type", "text/html")
             # self.end_headers()
