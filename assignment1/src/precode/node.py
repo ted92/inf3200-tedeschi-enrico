@@ -21,8 +21,8 @@ class Node:
     def __init__(self, num_hosts, rank, next_node):
         self.map = dict()
         self.size = 0
-        self.num_hosts = num_hosts
-        self.rank = rank
+        self.num_hosts = long(num_hosts)
+        self.rank = long(rank)
         self.next_node = next_node
 
     def get_value(self, key):
