@@ -2,6 +2,7 @@
 # vim: set sts=4 sw=4 et:
 
 import BaseHTTPServer
+import SocketServer
 import time
 import threading
 import signal
@@ -144,7 +145,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         return md5_key
 
-class NodeServer(BaseHTTPServer.HTTPServer):
+class NodeServer(BaseHTTPServer.HTTPServer, SocketServer.ForkingMixIn, SocketServer.ThreadingMixIn):
 
     def server_bind(self):
         BaseHTTPServer.HTTPServer.server_bind(self)
