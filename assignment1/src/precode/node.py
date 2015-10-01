@@ -8,8 +8,8 @@ import signal
 import sys
 import os
 import getopt
-import md5
 import hashlib
+import httplib
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
@@ -60,10 +60,10 @@ class Node:
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
-    # sys.argv[0] --> num_hosts
-    # sys.argv[1] --> rank
-    # sys.argv[2] --> next_node
-    node = Node(sys.argv[0], sys.argv[1], sys.argv[2])
+    # sys.argv[1] --> num_hosts
+    # sys.argv[2] --> rank
+    # sys.argv[3] --> next_node
+    node = Node(sys.argv[1], sys.argv[2], sys.argv[3])
 
     # Insert the key
     def do_GET(self):
