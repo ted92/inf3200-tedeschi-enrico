@@ -122,8 +122,8 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.rfile.close();
             print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_md5 % node.num_hosts)
             self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
+            # self.send_header("Content-type", "text/html")
+            # self.end_headers()
         else:
             print("not my key, forwarding", key, key_md5)
             # otherwise call the next node
