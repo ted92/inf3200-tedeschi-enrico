@@ -116,22 +116,21 @@ can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
 
 \section{Design}
 
-We divided our key space in the same manner as Chord\cite{chord}: we arranged
-the keys along one dimension and in a ring, with each node storing keys in an
-assigned portion of the key space. Because all nodes are known ahead of time,
-with no joining or leaving, we could divide the key space equally between them.
+We arranged our key space along one dimension in a ring, following the lead of
+Chord\cite{chord}. Regions of the key space are assigned to each node. Each node
+is aware of the range of key space that it is responsible and the next node in
+the ring. If a node receives a request to store or retrieve a key that is not in
+its range, it will forward the request to the next node.
 
-We did not implement Chord's finger tables optimization, which is what allows
-Chord to do lookups in $O(\log n)$ time. Without finger tables, our nodes can
-only pass requests to their immediate successor, so requests take $O(n)$ time.
+Though our design was inspired by Chord, we did not implement Chord's finger
+table optimization, for lack of time.
 
-For forwarding requests to successor nodes, we used the simple synchronous
+Because all nodes are known ahead of time, with no joining or leaving, we could
+divide the key space evenly between each node.
+
+For forwarding requests to successor nodes, we used a simple synchronous
 strategy: the node's request-handler thread will block while it contacts the
-next node. This was the easiest to implement, but every request leaves a chain
-of open connections and blocked threads around the ring of nodes, which will
-become a problem as the number of machines or frequency of requests grows. An
-asynchronous messaging system would allow nodes to close connections and free
-resources as a request propagated around the ring.
+next node. This was the easiest to implement, but it is wasteful of resources.
 
 % TODO: Illustrations
 
@@ -185,9 +184,37 @@ access between machines in the cluster to start and shutdown nodes.
 
 \section{Discussion}
 
-% TODO: O(n) lookup.
-% TODO: Finger tables O(log n)
+Our design decisions favored simplicity over performance. The simple ring
+structure was easy to implement, but requests may need to be forwarded along
+several nodes in the ring before finding the correct key. The number of hops is
+linear with the number of nodes, $O(n)$. Chord's finger-table
+optimization\cite{chord} finds nodes in $O(\log_2 n)$ hops. We had hoped to
+implement the same strategy in our project but we ran out of time.
 
+The simple synchronous request forwarding strategy is also a potential
+bottleneck. It leaves a thread idle on each node involved in each request,
+waiting until the right key is found before returning it back through all of the
+nodes that were involved. We suspect that, as the number nodes grows or request
+frequency increases, this holding of resources will choke the system. The
+advantage of this approach is its simplicity. The request and response protocol
+is identical between client and front-end, front-end and storage node, and
+between storage nodes themselves. The storage nodes also use the same logic to
+handle requests whether the request comes from the front-end or another node in
+the chain.
+
+Asynchronous message-passing would allow intermediate nodes in a search to free
+resources. The first node could block, and then send a message to the next node.
+If this message included a return address to the first node, then the other
+nodes in the ring could pass it along without leaving connections open or
+blocking. Finally, the node that has the key could send the value to original
+node. When that original node received its answer, it could unblock and send the
+response to the front-end. Such a strategy should be more efficient, but would
+require different message formats for requests and answers, and nodes would need
+logic to receive answer messages and match them to waiting threads to send
+responses. We suspect that the finger tables would give a much larger
+performance boost. Not only that, but with $O(\log_2 n)$ searching, only a few
+nodes would be involved in each search, and the overhead from waiting
+synchronously on just a few nodes might be acceptable.
 
 
 \section{Evaluation}
