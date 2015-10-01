@@ -72,20 +72,15 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         key_md5 = self.get_md5(key)
 
-        print("request for key", key, key_md5)
-
         # if is the right node then check if the key exists
         if(node.rank == key_md5 % node.num_hosts):
-            print("should be my key", key, key_md5)
             value = node.get_value(key)
 
             #if the key doesn't exist then return 404
             if value is None:
-                print("not found", key, key_md5)
                 self.sendErrorResponse(404, "Key not found")
                 return
 
-            print("found", key, key_md5)
             # Write header
             self.send_response(200)
             self.send_header("Content-type", "application/octet-stream")
@@ -96,7 +91,6 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(value)
 
         else:
-            print("not my key, forwarding", key, key_md5)
             # forward the get request to the next node
             node.sendGET(self.path)
 
@@ -106,27 +100,21 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # convert the key with md5 value
         key_md5 = self.get_md5(key)
 
-        print("request to put", key, key_md5)
-
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
-            print("body too large, rejecting", key, key_md5)
             self.sendErrorResponse(400, "Content body to large")
             return
 
         # put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
         if (node.rank == key_md5 % node.num_hosts):
-            print("should be my key, storing", key, key_md5)
             # if is the right node, then save the data in the map
             node.put_value(key, self.rfile.read(contentLength), contentLength)
-            self.rfile.close();
             print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_md5 % node.num_hosts)
             self.send_response(200)
             # self.send_header("Content-type", "text/html")
             # self.end_headers()
         else:
-            print("not my key, forwarding", key, key_md5)
             # otherwise call the next node
             node.sendPUT(self.path, self.rfile.read(contentLength))
 
