@@ -68,8 +68,10 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         key = self.path
 
+        key_md5 = self.get_md5(key)
+
         # if is the right node then check if the key exists
-        if(node.rank == md5(self.path) % node.num_hosts):
+        if(node.rank == key_md5 % node.num_hosts):
             value = node.get_value(key)
 
             #if the key doesn't exist then return 404
@@ -91,6 +93,11 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             node.sendGET(self.path)
 
     def do_PUT(self):
+        key = self.path
+
+        # convert the key with md5 value
+        key_md5 = self.get_md5(key)
+
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
@@ -98,10 +105,10 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         # put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
-        if (node.rank == md5(self.path) % node.num_hosts):
+        if (node.rank == key_md5 % node.num_hosts):
             # if is the right node, then save the data in the map
-            node.put_value(self.path, self.rfile.read(contentLength), contentLength)
-            print "value saved in rank: ", node.rank, " with md5(key) value: ", (md5(self.path) % node.num_hosts)
+            node.put_value(key, self.rfile.read(contentLength), contentLength)
+            print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_md5 % node.num_hosts)
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
@@ -115,7 +122,14 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(msg)
 
+    # method to get the md5 of a key
+    def get_md5(self, key):
+        md5 = hashlib.md5()
+        md5.update(key)
+        digest = md5.hexdigest()
+        md5_key = int(digest, 16)
 
+        return md5_key
 
 class NodeServer(BaseHTTPServer.HTTPServer):
 
