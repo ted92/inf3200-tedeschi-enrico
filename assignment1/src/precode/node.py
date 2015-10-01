@@ -9,6 +9,7 @@ import sys
 import os
 import getopt
 import md5
+import hashlib
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
