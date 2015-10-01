@@ -2,21 +2,29 @@
 # vim: set sts=4 sw=4 et:
 
 import BaseHTTPServer
+import SocketServer
 import time
 import threading
 import signal
 import sys
 import os
 import getopt
+import hashlib
+import httplib
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
 
+node_httpserver_port = 8000
+
 class Node:
 
-    def __init__(self):
+    def __init__(self, num_hosts, rank, next_node):
         self.map = dict()
         self.size = 0
+        self.num_hosts = long(num_hosts)
+        self.rank = long(rank)
+        self.next_node = next_node
 
     def get_value(self, key):
         return self.map.get(key)
@@ -25,54 +33,102 @@ class Node:
         self.size = self.size + size
         self.map[key] = value
 
+    def get_num_hosts(self):
+        return self.num_hosts
 
+    def get_rank(self):
+        return self.rank
+
+    def get_next_node(self):
+        return self.next_node
+
+    # to PUT an hash value in the next node
+    def sendPUT(self, key, value):
+		node = self.next_node;
+		conn = httplib.HTTPConnection(node, node_httpserver_port)
+		conn.request("PUT", "/%s" % key, value)
+
+    # to GET an hash value from the next node
+    def sendGET(self, key):
+		node = self.next_node
+		conn = httplib.HTTPConnection(node, node_httpserver_port)
+		conn.request("GET", "/%s" % key)
+		response = conn.getresponse()
+		data = response.read()
+
+		return data
 
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
-    # TODO: call node funtion with the parameters from the shell
-    for arg in sys.argv:
-        print arg
-    node = Node()
+    # sys.argv[1] --> num_hosts
+    # sys.argv[2] --> rank
+    # sys.argv[3] --> next_node
+    node = Node(sys.argv[1], sys.argv[2], sys.argv[3])
 
-    # Returns the
+    # Insert the key
     def do_GET(self):
         key = self.path
 
-        # TODO: distributed stores
-        #   Divide key space.
-        #   If this node is responsible for key, give response.
-        #   If not, query next node.
-        value = node.get_value(key)
+        key_md5 = self.get_md5(key)
 
-        if value is None:
-            self.sendErrorResponse(404, "Key not found")
-            return
+        print("request for key", key, key_md5)
 
-        # Write header
-        self.send_response(200)
-        self.send_header("Content-type", "application/octet-stream")
-        self.end_headers()
+        # if is the right node then check if the key exists
+        if(node.rank == key_md5 % node.num_hosts):
+            print("should be my key", key, key_md5)
+            value = node.get_value(key)
 
-        # Write Body
-        self.wfile.write(value)
+            #if the key doesn't exist then return 404
+            if value is None:
+                print("not found", key, key_md5)
+                self.sendErrorResponse(404, "Key not found")
+                return
+
+            print("found", key, key_md5)
+            # Write header
+            self.send_response(200)
+            self.send_header("Content-type", "application/octet-stream")
+            self.end_headers()
+
+
+            # Write Body
+            self.wfile.write(value)
+
+        else:
+            print("not my key, forwarding", key, key_md5)
+            # forward the get request to the next node
+            node.sendGET(self.path)
 
     def do_PUT(self):
+        key = self.path
+
+        # convert the key with md5 value
+        key_md5 = self.get_md5(key)
+
+        print("request to put", key, key_md5)
+
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
+            print("body too large, rejecting", key, key_md5)
             self.sendErrorResponse(400, "Content body to large")
             return
 
-        # TODO: distributed stores
-        #   Divide key space.
-        #   If this node is responsible for key, give response.
-        #   If not, query next node.
-        node.put_value(self.path, self.rfile.read(contentLength), contentLength)
-
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
+        # put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
+        if (node.rank == key_md5 % node.num_hosts):
+            print("should be my key, storing", key, key_md5)
+            # if is the right node, then save the data in the map
+            node.put_value(key, self.rfile.read(contentLength), contentLength)
+            self.rfile.close();
+            print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_md5 % node.num_hosts)
+            self.send_response(200)
+            # self.send_header("Content-type", "text/html")
+            # self.end_headers()
+        else:
+            print("not my key, forwarding", key, key_md5)
+            # otherwise call the next node
+            node.sendPUT(self.path, self.rfile.read(contentLength))
 
     def sendErrorResponse(self, code, msg):
         self.send_response(code)
@@ -80,9 +136,16 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(msg)
 
+    # method to get the md5 of a key
+    def get_md5(self, key):
+        md5 = hashlib.md5()
+        md5.update(key)
+        digest = md5.hexdigest()
+        md5_key = int(digest, 16)
 
+        return md5_key
 
-class NodeServer(BaseHTTPServer.HTTPServer):
+class NodeServer(BaseHTTPServer.HTTPServer, SocketServer.ForkingMixIn, SocketServer.ThreadingMixIn):
 
     def server_bind(self):
         BaseHTTPServer.HTTPServer.server_bind(self)

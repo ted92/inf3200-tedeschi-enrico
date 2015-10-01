@@ -41,7 +41,7 @@ done
 # Boot all processes
 for ((rank = 0; rank < num_hosts; rank++))
 do
-  echo "Booting node" ${nodes_array[$rank]}
+  #echo "Booting node" ${nodes_array[$rank]}
   # set the current node and the next node
   current=${nodes_array[$rank]}
   if [ $rank -ne $((num_hosts-1)) ]
@@ -51,8 +51,6 @@ do
   
   #give the parameter to node.py
   nohup ssh $current bash -c "'python -u $directory/$executable $num_hosts $rank $next_node'" 2>&1 | sed "s/^/$current: /" &
-  #increment the rank to send in each node with 'let'
-  echo "$rank $current   next: $next_node"
 done
 
 # Run tests
