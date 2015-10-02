@@ -6,7 +6,7 @@ import httplib
 def sendPUT(hostname, port, key, value):
 
     conn = httplib.HTTPConnection(hostname, port)
-    conn.request("PUT", "/%s" % key, value)
+    conn.request("PUT", key, value)
 
     # Must read response even if we don't do anything with it.
     # If we don't, the server will get broken pipe errors.
@@ -21,7 +21,7 @@ def sendPUT(hostname, port, key, value):
 
 def sendGET(hostname, port, key):
     conn = httplib.HTTPConnection(hostname, port)
-    conn.request("GET", "/%s" % key)
+    conn.request("GET", key)
     response = conn.getresponse()
     data = response.read()
 
