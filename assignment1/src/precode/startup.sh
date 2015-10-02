@@ -30,8 +30,8 @@ nodes_array=($nodes)
 echo "Nodes:"
 echo $nodes
 
-num_hosts=${#nodes_array[@]}
-echo "$num_hosts total"
+node_count=${#nodes_array[@]}
+echo "$node_count total"
 
 
 # Stop any running processes
@@ -41,18 +41,18 @@ do
 done
 
 # Boot all processes
-for ((rank = 0; rank < num_hosts; rank++))
+for ((rank = 0; rank < node_count; rank++))
 do
   #echo "Booting node" ${nodes_array[$rank]}
   # set the current node and the next node
   current=${nodes_array[$rank]}
-  if [ $rank -ne $((num_hosts-1)) ]
+  if [ $rank -ne $((node_count-1)) ]
   then next_node=${nodes_array[rank+1]}
   else next_node=${nodes_array[0]}
   fi
   
   #give the parameter to node.py
-  nohup ssh $current bash -c "'python -u $directory/$executable $num_hosts $rank $next_node'" 2>&1 | sed "s/^/$current: /" &
+  nohup ssh $current bash -c "'python -u $directory/$executable $node_count $rank $next_node'" 2>&1 | sed "s/^/$current: /" &
 done
 
 # Run tests

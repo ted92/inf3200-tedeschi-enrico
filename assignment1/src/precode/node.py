@@ -57,9 +57,9 @@ class ForwardRequest:
 #
 class NodeCore:
 
-    def __init__(self, num_hosts, rank, next_node):
+    def __init__(self, node_count, rank, next_node):
         self.map = dict()
-        self.num_hosts = long(num_hosts)
+        self.node_count = long(node_count)
         self.rank = long(rank)
         self.next_node = next_node
 
@@ -71,7 +71,7 @@ class NodeCore:
         # This effectively maps the key to a key space of integers from 0 to n-1.
         # Each node is responsible for one integer in this key space.
         key_hash = node_hash(key)
-        rank_responsible = key_hash % self.num_hosts
+        rank_responsible = key_hash % self.node_count
         return rank_responsible == self.rank
 
 
@@ -211,7 +211,7 @@ if __name__ == '__main__':
 
     httpserver_port = 8000
 
-    # sys.argv[1] --> num_hosts
+    # sys.argv[1] --> node_count
     # sys.argv[2] --> rank
     # sys.argv[3] --> next_node
     node = NodeCore(sys.argv[1], sys.argv[2], sys.argv[3])
