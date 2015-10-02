@@ -59,7 +59,6 @@ class NodeCore:
 
     def __init__(self, num_hosts, rank, next_node):
         self.map = dict()
-        self.size = 0
         self.num_hosts = long(num_hosts)
         self.rank = long(rank)
         self.next_node = next_node
@@ -84,7 +83,6 @@ class NodeCore:
     def do_put(self, key, value):
         if self.responsible_for_key(key):
             self.map[key] = value
-            # TODO: update size. Use size for something?
             return ValueStored()
         else:
             return ForwardRequest(self.next_node)
@@ -219,8 +217,6 @@ if __name__ == '__main__':
     node = NodeCore(sys.argv[1], sys.argv[2], sys.argv[3])
 
     # Start the webserver which handles incomming requests
-    # TODO: accept parameters from command line:
-    #   total number of nodes, rank of this node, name of next node
     try:
         print "Starting HTTP server on port %d" % httpserver_port
         httpd = NodeServer(("",httpserver_port), NodeHttpHandler)
