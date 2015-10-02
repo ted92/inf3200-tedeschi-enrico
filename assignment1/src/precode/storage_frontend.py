@@ -11,6 +11,8 @@ import httplib
 import random
 import string
 
+import node_request
+
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
 
@@ -28,30 +30,13 @@ class StorageServerFrontend:
 	
 	def sendGET(self, key):
 		node = random.choice(storageBackendNodes)
-
-		conn = httplib.HTTPConnection(node, node_httpserver_port)
-		conn.request("GET", "/%s" % key)
-		response = conn.getresponse()
-		data = response.read()
-
+		data = node_request.sendGET(node, node_httpserver_port, key)
 		return data
 		
 	def sendPUT(self, key, value, size):
 		self.size = self.size + size
 		node = random.choice(storageBackendNodes)
-
-		conn = httplib.HTTPConnection(node, node_httpserver_port)
-		conn.request("PUT", "/%s" % key, value)
-
-		# Must read response even if we don't do anything with it.
-		# If we don't, the server will get broken pipe errors.
-		#	1. Return without reading response
-		#	2. Server might not be finish sending response yet.
-		#	3. Library code here closes connection.
-		#	4. Server code tries to finish writing to closed pipe.
-		#	5. Broken pipe.
-		response = conn.getresponse()
-		data = response.read()
+		node_request.sendPUT(node, node_httpserver_port, key, value)
 
 
 class FrontendHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):

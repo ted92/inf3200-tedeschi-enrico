@@ -10,9 +10,10 @@ import sys
 import os
 import getopt
 import hashlib
-import httplib
 from pprint import pprint
 from pprint import pformat
+
+import node_request
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
@@ -93,31 +94,7 @@ class Node:
     def get_next_node(self):
         return self.next_node
 
-    # to PUT an hash value in the next node
-    def sendPUT(self, key, value):
-		node = self.next_node;
-		conn = httplib.HTTPConnection(node, node_httpserver_port)
-		conn.request("PUT", "/%s" % key, value)
 
-		# Must read response even if we don't do anything with it.
-		# If we don't, the server will get broken pipe errors.
-		#	1. Return without reading response
-		#	2. Server might not be finish sending response yet.
-		#	3. Library code here closes connection.
-		#	4. Server code tries to finish writing to closed pipe.
-		#	5. Broken pipe.
-		response = conn.getresponse()
-		data = response.read()
-
-    # to GET an hash value from the next node
-    def sendGET(self, key):
-		node = self.next_node
-		conn = httplib.HTTPConnection(node, node_httpserver_port)
-		conn.request("GET", "/%s" % key)
-		response = conn.getresponse()
-		data = response.read()
-
-		return data
 
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -136,7 +113,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.respond(404, "text/html", "Key not found")
 
         elif isinstance(result, ForwardRequest):
-            node.sendGET(self.path)
+            node_request.sendGET(result.destination, node_httpserver_port, key)
 
         else:
             raise Exception("Unknown result command: " + pformat(result))
@@ -159,7 +136,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.respond(200, "application/octet-stream", "")
 
         elif isinstance(result, ForwardRequest):
-            node.sendPUT(self.path, self.rfile.read(contentLength))
+            node_request.sendPUT(result.destination, node_httpserver_port, key, value)
 
         else:
             raise Exception("Unknown result command: " + pformat(result))
