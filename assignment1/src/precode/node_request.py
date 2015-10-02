@@ -3,6 +3,13 @@
 
 import httplib
 
+
+# ----------------------------------------------------------
+# Common routines for sending GET and PUT requests to nodes
+#
+
+
+# Send a PUT request, to store a key-value pair
 def sendPUT(hostname, port, key, value):
 
     conn = httplib.HTTPConnection(hostname, port)
@@ -18,7 +25,11 @@ def sendPUT(hostname, port, key, value):
     response = conn.getresponse()
     data = response.read()
 
+    if response.status!=200:
+        raise
 
+
+# Send a GET request, to look up a key
 def sendGET(hostname, port, key):
     conn = httplib.HTTPConnection(hostname, port)
     conn.request("GET", key)
