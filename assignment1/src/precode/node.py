@@ -130,10 +130,10 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         result = node.do_get(key)
 
         if isinstance(result, ValueFound):
-            self.respond_with_value(result.value)
+            self.respond(200, "application/octet-stream", result.value)
 
         elif isinstance(result, ValueNotFound):
-            self.respond_not_found()
+            self.respond(404, "text/html", "Key not found")
 
         elif isinstance(result, ForwardRequest):
             node.sendGET(self.path)
@@ -148,7 +148,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
-            self.respond_too_large()
+            self.respond(400, "text/html", "Content body too large")
             return
 
         value = self.rfile.read(contentLength)
@@ -156,7 +156,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         result = node.do_put(key, value)
 
         if isinstance(result, ValueStored):
-            self.respond_ok_no_content()
+            self.respond(200, "application/octet-stream", "")
 
         elif isinstance(result, ForwardRequest):
             node.sendPUT(self.path, self.rfile.read(contentLength))
@@ -165,29 +165,11 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             raise Exception("Unknown result command: " + pformat(result))
 
 
-    def respond_with_value(self, value):
-        self.sendOkResponse("application/octet-stream", value)
-
-    def respond_ok_no_content(self):
-        self.sendOkResponse("application/octet-stream", "")
-
-    def respond_not_found(self):
-        self.sendErrorResponse(404, "Key not found")
-
-    def respond_too_large(self):
-        self.sendErrorResponse(400, "Content body to large")
-
-    def sendOkResponse(self, content_type, body):
-        self.send_response(200)
+    def respond(self, status_code, content_type, body):
+        self.send_response(status_code)
         self.send_header("Content-type", content_type)
         self.end_headers()
         self.wfile.write(body)
-
-    def sendErrorResponse(self, code, msg):
-        self.send_response(code)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.wfile.write(msg)
 
 
 class NodeServer(BaseHTTPServer.HTTPServer, SocketServer.ForkingMixIn, SocketServer.ThreadingMixIn):
