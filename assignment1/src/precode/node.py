@@ -133,13 +133,11 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         elif isinstance(result, ForwardRequest):
             # Forward request to specified node
-            value = node_request.sendGET(result.destination, node_httpserver_port, key)
-            # Interpret response and send response
-            # TODO: just mimic response
-            if value:
-                self.respond(200, "application/octet-stream", value)
-            else:
-                self.respond(404, "text/html", "Key not found")
+            (status_code, content_type, data) = node_request.sendGET(
+                    result.destination, node_httpserver_port, key)
+
+            # Relay response to requesting node
+            self.respond(status_code, content_type, data)
 
         else:
             raise Exception("Unknown result command: " + pformat(result))

@@ -23,6 +23,9 @@ def sendGET(hostname, port, key):
     conn = httplib.HTTPConnection(hostname, port)
     conn.request("GET", key)
     response = conn.getresponse()
+
+    status_code = response.status
+    content_type = response.getheader("Content-Type")
     data = response.read()
 
-    return data
+    return (status_code, content_type, data)

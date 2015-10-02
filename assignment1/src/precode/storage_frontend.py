@@ -30,7 +30,8 @@ class StorageServerFrontend:
 	
 	def sendGET(self, key):
 		node = random.choice(storageBackendNodes)
-		data = node_request.sendGET(node, node_httpserver_port, key)
+		(status_code, content_type, data) = node_request.sendGET(
+				node, node_httpserver_port, key)
 		return data
 		
 	def sendPUT(self, key, value, size):
