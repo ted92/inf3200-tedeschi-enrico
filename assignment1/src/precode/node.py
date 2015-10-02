@@ -61,11 +61,7 @@ class Node:
 
     def responsible_for_key(self, key):
         key_hash = node_hash(key)
-        responsible_rank = key_hash % self.num_hosts
-        print "Key: %s, Hash: %d, Responsible: %d" % (key, key_hash, responsible_rank)
-        if self.rank!=responsible_rank:
-            print "This key goes to %d, I'm %d." % (responsible_rank, self.rank)
-        return self.rank == responsible_rank
+        return self.rank == key_hash % self.num_hosts
 
     def do_put(self, key, value):
         if self.responsible_for_key(key):
@@ -144,9 +140,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.respond(200, "application/octet-stream", "")
 
         elif isinstance(result, ForwardRequest):
-            print "Forwarding PUT to " + result.destination
             node_request.sendPUT(result.destination, node_httpserver_port, key, value)
-            print "Forward successful, responding OK"
             self.respond(200, "application/octet-stream", "")
 
         else:
