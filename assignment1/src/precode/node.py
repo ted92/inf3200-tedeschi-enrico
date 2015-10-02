@@ -127,27 +127,20 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         key = self.path
 
-        # if is the right node then check if the key exists
-        if(node.responsible_for_key(key)):
-            value = node.get_value(key)
+        result = node.do_get(key)
 
-            #if the key doesn't exist then return 404
-            if value is None:
-                self.sendErrorResponse(404, "Key not found")
-                return
+        if isinstance(result, ValueFound):
+            self.respond_with_value(result.value)
 
-            # Write header
-            self.send_response(200)
-            self.send_header("Content-type", "application/octet-stream")
-            self.end_headers()
+        elif isinstance(result, ValueNotFound):
+            self.respond_not_found()
 
-
-            # Write Body
-            self.wfile.write(value)
+        elif isinstance(result, ForwardRequest):
+            node.sendGET(self.path)
 
         else:
-            # forward the get request to the next node
-            node.sendGET(self.path)
+            raise Exception("Unknown result command: " + pformat(result))
+
 
     def do_PUT(self):
         key = self.path
@@ -155,19 +148,40 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
-            self.sendErrorResponse(400, "Content body to large")
+            self.respond_too_large()
             return
 
-        # put the value only if the key value is right
-        if (node.responsible_for_key(key)):
-            # if is the right node, then save the data in the map
-            node.put_value(key, self.rfile.read(contentLength), contentLength)
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-        else:
-            # otherwise call the next node
+        value = self.rfile.read(contentLength)
+
+        result = node.do_put(key, value)
+
+        if isinstance(result, ValueStored):
+            self.respond_ok_no_content()
+
+        elif isinstance(result, ForwardRequest):
             node.sendPUT(self.path, self.rfile.read(contentLength))
+
+        else:
+            raise Exception("Unknown result command: " + pformat(result))
+
+
+    def respond_with_value(self, value):
+        self.sendOkResponse("application/octet-stream", value)
+
+    def respond_ok_no_content(self):
+        self.sendOkResponse("application/octet-stream", "")
+
+    def respond_not_found(self):
+        self.sendErrorResponse(404, "Key not found")
+
+    def respond_too_large(self):
+        self.sendErrorResponse(400, "Content body to large")
+
+    def sendOkResponse(self, content_type, body):
+        self.send_response(200)
+        self.send_header("Content-type", content_type)
+        self.end_headers()
+        self.wfile.write(body)
 
     def sendErrorResponse(self, code, msg):
         self.send_response(code)
