@@ -245,6 +245,7 @@ if __name__ == '__main__':
 		
 	except:
 		print "Error: unable to http server thread"
+		raise
 	
 	# Run a series of tests to verify the storage integrity
 	if run_tests:
