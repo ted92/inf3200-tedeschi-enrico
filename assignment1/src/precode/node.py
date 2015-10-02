@@ -66,6 +66,7 @@ class Node:
     def do_put(self, key, value):
         if self.responsible_for_key(key):
             self.map[key] = value
+            # TODO: update size. Use size for something?
             return ValueStored()
         else:
             return ForwardRequest(self.next_node)
@@ -77,22 +78,6 @@ class Node:
             else: return ValueNotFound()
         else:
             return ForwardRequest(self.next_node)
-
-    def get_value(self, key):
-        return self.map.get(key)
-
-    def put_value(self, key, value, size):
-        self.size = self.size + size
-        self.map[key] = value
-
-    def get_num_hosts(self):
-        return self.num_hosts
-
-    def get_rank(self):
-        return self.rank
-
-    def get_next_node(self):
-        return self.next_node
 
 
 
