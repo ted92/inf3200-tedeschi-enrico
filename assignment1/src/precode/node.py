@@ -113,7 +113,11 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.respond(404, "text/html", "Key not found")
 
         elif isinstance(result, ForwardRequest):
-            node_request.sendGET(result.destination, node_httpserver_port, key)
+            value = node_request.sendGET(result.destination, node_httpserver_port, key)
+            if value:
+                self.respond(200, "application/octet-stream", value)
+            else:
+                self.respond(404, "text/html", "Key not found")
 
         else:
             raise Exception("Unknown result command: " + pformat(result))
@@ -137,6 +141,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         elif isinstance(result, ForwardRequest):
             node_request.sendPUT(result.destination, node_httpserver_port, key, value)
+            self.respond(200, "application/octet-stream", "")
 
         else:
             raise Exception("Unknown result command: " + pformat(result))
