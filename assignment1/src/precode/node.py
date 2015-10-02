@@ -10,7 +10,6 @@ import sys
 import os
 import getopt
 import hashlib
-from pprint import pprint
 from pprint import pformat
 
 import node_request
@@ -57,7 +56,6 @@ class Node:
         self.num_hosts = long(num_hosts)
         self.rank = long(rank)
         self.next_node = next_node
-        pprint(self.__dict__, indent=2)
 
     def responsible_for_key(self, key):
         key_hash = node_hash(key)
