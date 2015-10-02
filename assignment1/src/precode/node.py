@@ -11,6 +11,7 @@ import os
 import getopt
 import hashlib
 import httplib
+from pprint import pprint
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
@@ -25,6 +26,7 @@ class Node:
         self.num_hosts = long(num_hosts)
         self.rank = long(rank)
         self.next_node = next_node
+        pprint(self.__dict__, indent=2)
 
     def get_value(self, key):
         return self.map.get(key)
