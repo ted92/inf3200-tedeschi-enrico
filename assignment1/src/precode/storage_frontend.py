@@ -25,7 +25,6 @@ node_httpserver_port = 8000
 class StorageServerFrontend:
 	
 	def __init__(self):
-		self.map = dict()		# (Remove this) Dictionary which holds the key/value pairs
 		self.size = 0
 	
 	def sendGET(self, key):
