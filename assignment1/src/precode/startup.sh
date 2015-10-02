@@ -1,18 +1,20 @@
 #!/bin/bash          
 # vim: set sts=2 sw=2 et:
 
-num_hosts=$1
+nodes=$*
 
-if [ -z "$num_hosts" ]
+if [ -z "$nodes" ]
 then
-  let num_hosts=3
+  nodes='compute-14-1 compute-15-1 compute-19-1'
   cat <<-EOF
 
-	Using default of $num_hosts random hosts.
-	Use a numerical argument to change the number of hosts.
+	Using default list of nodes. To use different nodes, specify them on the
+	command line. The helper script "list_random_hosts.sh" can give you a
+	list to use.
 
 	For example:
-	    $(basename $0) 6
+	    $(basename $0) compute-1-4 compute-15-0 compute-3-2 compute-6-0
+	    $(basename $0) \$(./list_random_hosts.sh 6)
 
 
 	EOF
@@ -22,14 +24,14 @@ fi
 directory=`pwd` #current working directory
 executable="node.py";
 
-# Lists of nodes
-nodes=$(rocks list host | grep compute | cut -d" " -f1 | sed 's/.$//' | shuf | head -n "$num_hosts")
-
 #put the output into an array
 nodes_array=($nodes)
 
 echo "Nodes:"
 echo $nodes
+
+num_hosts=${#nodes_array[@]}
+echo "$num_hosts total"
 
 
 # Stop any running processes
