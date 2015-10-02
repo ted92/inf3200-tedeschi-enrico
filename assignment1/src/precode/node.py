@@ -73,10 +73,6 @@ class Node:
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
-    # sys.argv[1] --> num_hosts
-    # sys.argv[2] --> rank
-    # sys.argv[3] --> next_node
-    node = Node(sys.argv[1], sys.argv[2], sys.argv[3])
 
     # Insert the key
     def do_GET(self):
@@ -173,6 +169,11 @@ class NodeServer(BaseHTTPServer.HTTPServer, SocketServer.ForkingMixIn, SocketSer
 if __name__ == '__main__':
 
     httpserver_port = 8000
+
+    # sys.argv[1] --> num_hosts
+    # sys.argv[2] --> rank
+    # sys.argv[3] --> next_node
+    node = Node(sys.argv[1], sys.argv[2], sys.argv[3])
 
     # Start the webserver which handles incomming requests
     # TODO: accept parameters from command line:
