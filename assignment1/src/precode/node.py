@@ -12,6 +12,7 @@ import getopt
 import hashlib
 import httplib
 from pprint import pprint
+from pprint import pformat
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
@@ -32,6 +33,21 @@ def node_hash(s):
     return numerichash
 
 
+# Classes that represent response actions
+
+class ValueFound:
+    def __init__(self, value):
+        self.value = value
+
+class ValueNotFound: pass
+
+class ValueStored: pass
+
+class ForwardRequest:
+    def __init__(self, destination):
+        self.destination = destination
+
+
 class Node:
 
     def __init__(self, num_hosts, rank, next_node):
@@ -45,6 +61,21 @@ class Node:
     def responsible_for_key(self, key):
         key_hash = node_hash(key)
         return self.rank == key_hash % self.num_hosts
+
+    def do_put(self, key, value):
+        if self.responsible_for_key(key):
+            self.map[key] = value
+            return ValueStored()
+        else:
+            return ForwardRequest(self.next_node)
+
+    def do_get(self, key):
+        if self.responsible_for_key(key):
+            value = self.map.get(key)
+            if value: return ValueFound(value)
+            else: return ValueNotFound()
+        else:
+            return ForwardRequest(self.next_node)
 
     def get_value(self, key):
         return self.map.get(key)
@@ -121,14 +152,13 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_PUT(self):
         key = self.path
 
-        # convert the key with md5 value
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
             self.sendErrorResponse(400, "Content body to large")
             return
 
-        # put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
+        # put the value only if the key value is right
         if (node.responsible_for_key(key)):
             # if is the right node, then save the data in the map
             node.put_value(key, self.rfile.read(contentLength), contentLength)
