@@ -40,7 +40,7 @@ class TestNodeCore(unittest.TestCase):
         next_node = "NEXT"
         key = find_key_with_modulus(rank, node_count)
 
-        node_core = node.Node(node_count, rank, next_node)
+        node_core = node.NodeCore(node_count, rank, next_node)
         self.assertEqual(node_core.responsible_for_key(key), True)
 
     def test_responsible_for_key_negative(self):
@@ -49,7 +49,7 @@ class TestNodeCore(unittest.TestCase):
         next_node = "NEXT"
         key = find_key_with_modulus(1, node_count)
 
-        node_core = node.Node(node_count, rank, next_node)
+        node_core = node.NodeCore(node_count, rank, next_node)
         self.assertEqual(node_core.responsible_for_key(key), False)
 
 
@@ -60,7 +60,7 @@ class TestNodeCore(unittest.TestCase):
         key = find_key_with_modulus(1, node_count)
         value = "THIS IS A TEST VALUE"
 
-        node_core = node.Node(node_count, rank, next_node)
+        node_core = node.NodeCore(node_count, rank, next_node)
 
         # put value
         result = node_core.do_put(key,value)
@@ -76,7 +76,7 @@ class TestNodeCore(unittest.TestCase):
         key = find_key_with_modulus(1, node_count)
         value = "THIS IS A TEST VALUE"
 
-        node_core = node.Node(node_count, rank, next_node)
+        node_core = node.NodeCore(node_count, rank, next_node)
 
         # put value
         result = node_core.do_get(key)
@@ -92,7 +92,7 @@ class TestNodeCore(unittest.TestCase):
         key = find_key_with_modulus(rank, node_count)
         value = "THIS IS A TEST VALUE"
 
-        node_core = node.Node(node_count, rank, next_node)
+        node_core = node.NodeCore(node_count, rank, next_node)
 
         # put value
         result = node_core.do_put(key,value)
@@ -112,7 +112,7 @@ class TestNodeCore(unittest.TestCase):
         next_node = "NEXT"
         key = find_key_with_modulus(rank, node_count)
 
-        node_core = node.Node(node_count, rank, next_node)
+        node_core = node.NodeCore(node_count, rank, next_node)
         result = node_core.do_get(key)
 
         self.assertEqual(isinstance(result, node.ValueNotFound), True,
@@ -121,9 +121,9 @@ class TestNodeCore(unittest.TestCase):
 
 
     def test_ring_config_linear(self):
-        node0 = node.Node(3, 0, 'node1')
-        node1 = node.Node(3, 1, 'node2')
-        node2 = node.Node(3, 2, 'node0')
+        node0 = node.NodeCore(3, 0, 'node1')
+        node1 = node.NodeCore(3, 1, 'node2')
+        node2 = node.NodeCore(3, 2, 'node0')
 
         key = find_key_with_modulus(2, 3)
         value = "THIS IS A TEST VALUE"
@@ -139,9 +139,9 @@ class TestNodeCore(unittest.TestCase):
 
 
     def test_ring_config_wrap_around(self):
-        node0 = node.Node(3, 0, 'node1')
-        node1 = node.Node(3, 1, 'node2')
-        node2 = node.Node(3, 2, 'node0')
+        node0 = node.NodeCore(3, 0, 'node1')
+        node1 = node.NodeCore(3, 1, 'node2')
+        node2 = node.NodeCore(3, 2, 'node0')
 
         key = find_key_with_modulus(0, 3)
         value = "THIS IS A TEST VALUE"

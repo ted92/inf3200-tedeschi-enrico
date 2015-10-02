@@ -48,7 +48,7 @@ class ForwardRequest:
         self.destination = destination
 
 
-class Node:
+class NodeCore:
 
     def __init__(self, num_hosts, rank, next_node):
         self.map = dict()
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     # sys.argv[1] --> num_hosts
     # sys.argv[2] --> rank
     # sys.argv[3] --> next_node
-    node = Node(sys.argv[1], sys.argv[2], sys.argv[3])
+    node = NodeCore(sys.argv[1], sys.argv[2], sys.argv[3])
 
     # Start the webserver which handles incomming requests
     # TODO: accept parameters from command line:
