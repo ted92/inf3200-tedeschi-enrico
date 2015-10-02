@@ -42,6 +42,10 @@ class Node:
         self.next_node = next_node
         pprint(self.__dict__, indent=2)
 
+    def responsible_for_key(self, key):
+        key_hash = node_hash(key)
+        return self.rank == key_hash % self.num_hosts
+
     def get_value(self, key):
         return self.map.get(key)
 
@@ -92,10 +96,8 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         key = self.path
 
-        key_hash = node_hash(key)
-
         # if is the right node then check if the key exists
-        if(node.rank == key_hash % node.num_hosts):
+        if(node.responsible_for_key(key)):
             value = node.get_value(key)
 
             #if the key doesn't exist then return 404
@@ -120,8 +122,6 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         key = self.path
 
         # convert the key with md5 value
-        key_hash = node_hash(key)
-
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
@@ -129,10 +129,9 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         # put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
-        if (node.rank == key_hash % node.num_hosts):
+        if (node.responsible_for_key(key)):
             # if is the right node, then save the data in the map
             node.put_value(key, self.rfile.read(contentLength), contentLength)
-            # print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_hash % node.num_hosts)
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
