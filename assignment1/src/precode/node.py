@@ -10,139 +10,178 @@ import sys
 import os
 import getopt
 import hashlib
-import httplib
+from pprint import pformat
+
+import node_request
 
 MAX_CONTENT_LENGHT = 1024		# Maximum length of the content of the http request (1 kilobyte)
 MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
 
 node_httpserver_port = 8000
 
-class Node:
+# Convenience method to concisely hash a string with MD5
+def md5_string(s):
+    md5 = hashlib.md5()
+    md5.update(s)
+    digest = md5.hexdigest()
+    return digest
 
-    def __init__(self, num_hosts, rank, next_node):
+# Hashing function to map string keys to an integer key space
+def node_hash(s):
+    hexhash = md5_string(s)
+    numerichash = long(hexhash,16)
+    return numerichash
+
+
+# ----------------------------------------------------------
+# Small classes that represent node search results
+#
+
+class ValueFound:
+    def __init__(self, value):
+        self.value = value
+
+class ValueNotFound: pass
+
+class ValueStored: pass
+
+class ForwardRequest:
+    def __init__(self, destination):
+        self.destination = destination
+
+
+# ----------------------------------------------------------
+# Core logic of a node.
+#
+# Separated from HTTP handling for easier testing.
+#
+class NodeCore:
+
+    def __init__(self, node_count, rank, next_node):
         self.map = dict()
-        self.size = 0
-        self.num_hosts = long(num_hosts)
+        self.node_count = long(node_count)
         self.rank = long(rank)
         self.next_node = next_node
 
-    def get_value(self, key):
-        return self.map.get(key)
+    # Hashes the key into the key space and decides if this key is in range to
+    # be handled by this node.
+    def responsible_for_key(self, key):
+        # First hash the key using a standard hashing algorithm.
+        # Then do a modulo operation on the number of nodes in the cluster.
+        # This effectively maps the key to a key space of integers from 0 to n-1.
+        # Each node is responsible for one integer in this key space.
+        key_hash = node_hash(key)
+        rank_responsible = key_hash % self.node_count
+        return rank_responsible == self.rank
 
-    def put_value(self, key, value, size):
-        self.size = self.size + size
-        self.map[key] = value
 
-    def get_num_hosts(self):
-        return self.num_hosts
+    # Handle a request to store a key-value pair
+    #
+    # Returns a ValueStored instance if the value was stored successfully, or a
+    # ForwardReqest instance if the request should be forwarded to another node.
+    #
+    def do_put(self, key, value):
+        if self.responsible_for_key(key):
+            self.map[key] = value
+            return ValueStored()
+        else:
+            return ForwardRequest(self.next_node)
 
-    def get_rank(self):
-        return self.rank
+    # Handle a request to look up a key
+    #
+    # Returns a ValueFound instance if the value was found in this node, a
+    # ValueNotFound instance if this node is responsible for the key but there
+    # is nothing stored there yet, and a ForwardReqest instance if the request
+    # should be forwarded to another node.
+    #
+    def do_get(self, key):
+        if self.responsible_for_key(key):
+            value = self.map.get(key)
+            if value: return ValueFound(value)
+            else: return ValueNotFound()
+        else:
+            return ForwardRequest(self.next_node)
 
-    def get_next_node(self):
-        return self.next_node
 
-    # to PUT an hash value in the next node
-    def sendPUT(self, key, value):
-		node = self.next_node;
-		conn = httplib.HTTPConnection(node, node_httpserver_port)
-		conn.request("PUT", "/%s" % key, value)
 
-		# Must read response even if we don't do anything with it.
-		# If we don't, the server will get broken pipe errors.
-		#	1. Return without reading response
-		#	2. Server might not be finish sending response yet.
-		#	3. Library code here closes connection.
-		#	4. Server code tries to finish writing to closed pipe.
-		#	5. Broken pipe.
-		response = conn.getresponse()
-		data = response.read()
-
-    # to GET an hash value from the next node
-    def sendGET(self, key):
-		node = self.next_node
-		conn = httplib.HTTPConnection(node, node_httpserver_port)
-		conn.request("GET", "/%s" % key)
-		response = conn.getresponse()
-		data = response.read()
-
-		return data
-
+# ----------------------------------------------------------
+# HTTP interpreting logic of a node
+#
+# Handles HTTP requests and sends responses, but defers to NodeCore for actual
+# decisionmaking.
+#
 class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
-    # sys.argv[1] --> num_hosts
-    # sys.argv[2] --> rank
-    # sys.argv[3] --> next_node
-    node = Node(sys.argv[1], sys.argv[2], sys.argv[3])
 
-    # Insert the key
+    # Handle a GET request, to look up a key
     def do_GET(self):
+        # The URL path is the key
         key = self.path
 
-        key_md5 = self.get_md5(key)
+        # Defer to NodeCore
+        result = node.do_get(key)
 
-        # if is the right node then check if the key exists
-        if(node.rank == key_md5 % node.num_hosts):
-            value = node.get_value(key)
+        # Take action depending on NodeCore decision
+        if isinstance(result, ValueFound):
+            self.respond(200, "application/octet-stream", result.value)
 
-            #if the key doesn't exist then return 404
-            if value is None:
-                self.sendErrorResponse(404, "Key not found")
-                return
+        elif isinstance(result, ValueNotFound):
+            self.respond(404, "text/html", "Key not found")
 
-            # Write header
-            self.send_response(200)
-            self.send_header("Content-type", "application/octet-stream")
-            self.end_headers()
+        elif isinstance(result, ForwardRequest):
+            # Forward request to specified node
+            (status_code, content_type, data) = node_request.sendGET(
+                    result.destination, node_httpserver_port, key)
 
-
-            # Write Body
-            self.wfile.write(value)
+            # Relay response to requesting node
+            self.respond(status_code, content_type, data)
 
         else:
-            # forward the get request to the next node
-            node.sendGET(self.path)
+            raise Exception("Unknown result command: " + pformat(result))
 
+
+    # Handle a PUT request, to store a key-value pair
     def do_PUT(self):
+        # The URL path is the key
         key = self.path
 
-        # convert the key with md5 value
-        key_md5 = self.get_md5(key)
-
+        # Reject values that are too long
         contentLength = int(self.headers['Content-Length'])
 
         if contentLength <= 0 or contentLength > MAX_CONTENT_LENGHT:
-            self.sendErrorResponse(400, "Content body to large")
+            self.respond(400, "text/html", "Content body too large")
             return
 
-        # put the value only if the key value is right according to 'rank == md5(key) % num_hosts'
-        if (node.rank == key_md5 % node.num_hosts):
-            # if is the right node, then save the data in the map
-            node.put_value(key, self.rfile.read(contentLength), contentLength)
-            # print "value saved in rank: ", node.rank, " with md5(key) value: ", (key_md5 % node.num_hosts)
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
+        # The value is the body of the PUT request
+        value = self.rfile.read(contentLength)
+
+        # Defer to NodeCore
+        result = node.do_put(key, value)
+
+        # Take action depending on NodeCore decision
+        if isinstance(result, ValueStored):
+            self.respond(200, "application/octet-stream", "")
+
+        elif isinstance(result, ForwardRequest):
+            node_request.sendPUT(result.destination, node_httpserver_port, key, value)
+            self.respond(200, "application/octet-stream", "")
+
         else:
-            # otherwise call the next node
-            node.sendPUT(self.path, self.rfile.read(contentLength))
+            raise Exception("Unknown result command: " + pformat(result))
 
-    def sendErrorResponse(self, code, msg):
-        self.send_response(code)
-        self.send_header("Content-type", "text/html")
+
+    # Convenience method to make it easier to send responses
+    def respond(self, status_code, content_type, body):
+        self.send_response(status_code)
+        self.send_header("Content-type", content_type)
         self.end_headers()
-        self.wfile.write(msg)
+        self.wfile.write(body)
 
-    # method to get the md5 of a key
-    def get_md5(self, key):
-        md5 = hashlib.md5()
-        md5.update(key)
-        digest = md5.hexdigest()
-        md5_key = int(digest, 16)
 
-        return md5_key
-
+# ----------------------------------------------------------
+# Basic HTTP server
+#
 class NodeServer(BaseHTTPServer.HTTPServer, SocketServer.ForkingMixIn, SocketServer.ThreadingMixIn):
 
     def server_bind(self):
@@ -172,9 +211,12 @@ if __name__ == '__main__':
 
     httpserver_port = 8000
 
+    # sys.argv[1] --> node_count
+    # sys.argv[2] --> rank
+    # sys.argv[3] --> next_node
+    node = NodeCore(sys.argv[1], sys.argv[2], sys.argv[3])
+
     # Start the webserver which handles incomming requests
-    # TODO: accept parameters from command line:
-    #   total number of nodes, rank of this node, name of next node
     try:
         print "Starting HTTP server on port %d" % httpserver_port
         httpd = NodeServer(("",httpserver_port), NodeHttpHandler)
