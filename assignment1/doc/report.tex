@@ -119,7 +119,7 @@ can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
 We arranged our key space along one dimension in a ring, following the lead of
 Chord\cite{chord}. Regions of the key space are assigned to each node. Each node
 is aware of the range of key space that it is responsible and the next node in
-the ring. If a node receives a request to store or retrieve a key that is not in
+the ring (Fig \ref{fig:design}). If a node receives a request to store or retrieve a key that is not in
 its range, it will forward the request to the next node.
 
 Though our design was inspired by Chord, we did not implement Chord's finger
@@ -132,8 +132,12 @@ For forwarding requests to successor nodes, we used a simple synchronous
 strategy: the node's request-handler thread will block while it contacts the
 next node. This was the easiest to implement, but it is wasteful of resources.
 
-% TODO: Illustrations
-
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{design}
+    \caption{Design of the implemented Network}
+    \label{fig:design}
+\end{figure}
 
 
 \section{Implementation}
@@ -173,6 +177,39 @@ actually persist stored data between runs. So, for simplicity, we did not
 implement any kind of data persistence. Data is simply stored in memory and the
 store starts empty on each test run.
 
+
+\subsection{Node}
+
+Each node has a really simple workflow. It starts running and waits for a request, which could be GET or PUT from the \textit{Frontend} node.
+When the node gets a request it checks if is supposed to be for him, if yes then the request will be executed and the response is sent to the Frontend, otherwise the Node forward the request to the next node.
+Each node knows exactly which range of key to store thank to an md5 hash. The md5 function is in the node class and for each key an hash value is provided.
+To be sure that the node is working on the key that is supposed to be for him, this formula was implemented:
+\begin{lstlisting}
+if (node.rank == key_md5 % node.num_hosts)
+	#execute the request
+\end{lstlisting}
+A function \textit{hash()} exists already in python libraries but we used the md5 cryptographic hashing for problems related to security for the possible future implementations.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{node}
+    \caption{Implementation of the Node}
+    \label{fig:node}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{get}
+    \caption{How the GET works on the nodes}
+    \label{fig:get}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{put}
+    \caption{How the PUT works on the nodes}
+    \label{fig:put}
+\end{figure}
 
 \subsection{Environment}
 
