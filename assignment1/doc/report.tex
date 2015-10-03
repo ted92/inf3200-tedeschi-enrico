@@ -13,7 +13,7 @@
 
 % Your names in the header
 \pagestyle{fancy}
-\rhead{Enrico Tedeschi}
+\rhead{Enrico Tedeschi, Mike Murphy}
 \lhead{INF-3200 Distributed Systems - Assignment 1}
 \cfoot{\thepage}
 
@@ -86,7 +86,7 @@ Our data store \ldots
 
 \section{Technical Background}
 
-\if 0
+
 
 \begin{itemize} 
 \item[--] Distributed systems concept
@@ -96,22 +96,8 @@ Our data store \ldots
 \item[--] Theory about software engineering
 \item[--] Knowledge of git to manage the software versions
 \item[--] Notion of Chord architecture
-\item[--] Knowledge of programming with API in Python
-\item[--] Basic approach to Linux command line principles
+\item[--] Basic approach to Linux command line
 \end{itemize}
-
-\fi
-
-\if 0
-The interesting thing about DHTs is that storage and lookups are distributed among multiple machines \cite{linuxjournal_dht}
-Chord is an efficient distributed lookup system based on consistent hashing. It provides a
-unique mapping between an identifier space and a set of nodes \cite{chord}
-\newline
-Chord is efficient: determining the successor of an identifier requires that $O(log N)$ messages be exchanged with high probability where $N$ is the number of servers in the
-Chord network. Adding or removing a server from the network
-can be accomplished, with high probability, at a cost of $O(log^2 N)$ messages.
-\cite{chord}
-\fi
 
 
 \section{Design}
@@ -177,17 +163,33 @@ actually persist stored data between runs. So, for simplicity, we did not
 implement any kind of data persistence. Data is simply stored in memory and the
 store starts empty on each test run.
 
+\subsection{Frontend}
+
+The \textit{Frontend Node} (Fig \ref{fig:frontend}) has been modified considering an approach more close to the reality. It takes as input a list of nodes and a random one is chosen to get the requests.
+In that way a distributed transparency is provided since it doesn't matter from which node the frontend will connect because it will get the result anyway by reason of the nodes are communicating each others.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{frontend}
+    \caption{Implementation of the Frontend node}
+    \label{fig:frontend}
+\end{figure}
 
 \subsection{Node}
 
-Each node has a really simple workflow. It starts running and waits for a request, which could be GET or PUT from the \textit{Frontend} node.
-When the node gets a request it checks if is supposed to be for him, if yes then the request will be executed and the response is sent to the Frontend, otherwise the Node forward the request to the next node.
+Each node (Fig \ref{fig:node}) has a really simple workflow. It starts running and waits for a request, which could be GET or PUT from the \textit{Frontend} node. A class \textit{node\_request} has been implemented to keep the \textit{http} logic separates from the node logic, having in that way an easier approach to the testing part and avoiding to have a fat class, respecting a principle of the design pattern.
+When the node gets a request it checks if is supposed to be for him, if yes then the request will be executed and the response is sent to the Frontend, otherwise the Node forward the request through the class \textit{node\_request} to the next node.
 Each node knows exactly which range of key to store thank to an md5 hash. The md5 function is in the node class and for each key an hash value is provided.
-To be sure that the node is working on the key that is supposed to be for him, this formula was implemented:
+To be sure that the node is working on the key that is supposed to be for him, this method was implemented:
+
 \begin{lstlisting}
-if (node.rank == key_md5 % node.num_hosts)
-	#execute the request
+ def responsible_for_key(key):
+        key_hash = node_hash(key)
+        rank_resp = key_hash % self.node_count
+        return rank_responsible == self.rank
 \end{lstlisting}
+Where the function \textit{node\_hash(key)} takes care of converting a given key into a md5 hashed value and \textit{rank\_resp} is the node which is responsible to execute the requested operation, obtained using the module function on the total number of nodes.
+\newline
 A function \textit{hash()} exists already in python libraries but we used the md5 cryptographic hashing for problems related to security for the possible future implementations.
 
 \begin{figure}[h!]
@@ -197,19 +199,6 @@ A function \textit{hash()} exists already in python libraries but we used the md
     \label{fig:node}
 \end{figure}
 
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=0.5\textwidth]{get}
-    \caption{How the GET works on the nodes}
-    \label{fig:get}
-\end{figure}
-
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=0.5\textwidth]{put}
-    \caption{How the PUT works on the nodes}
-    \label{fig:put}
-\end{figure}
 
 \subsection{Environment}
 
