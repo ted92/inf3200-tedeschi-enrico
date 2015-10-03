@@ -178,7 +178,15 @@ In that way a distributed transparency is provided since it doesn't matter from 
 \subsection{Node}
 
 Each node (Fig \ref{fig:node}) has a really simple workflow. It starts running and waits for a request, which could be GET or PUT from the \textit{Frontend} node. A class \textit{node\_request} has been implemented to keep the \textit{http} logic separates from the node logic, having in that way an easier approach to the testing part and avoiding to have a fat class, respecting a principle of the design pattern.
-When the node gets a request it checks if is supposed to be for him, if yes then the request will be executed and the response is sent to the Frontend, otherwise the Node forward the request through the class \textit{node\_request} to the next node.
+When the node gets a request it checks if is supposed to be for him, if yes then the request will be executed and the response is sent to the Frontend, otherwise the Node forward the request through the class \textit{node\_request} to the next node (Fig \ref{fig:putget}).
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{putget}
+    \caption{Implementation of the PUT/GET calls}
+    \label{fig:putget}
+\end{figure}
+
 Each node knows exactly which range of key to store thank to an md5 hash. The md5 function is in the node class and for each key an hash value is provided.
 To be sure that the node is working on the key that is supposed to be for him, this method was implemented:
 
