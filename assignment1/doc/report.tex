@@ -200,24 +200,42 @@ assigned range, it forwards the request to the next node (Fig \ref{fig:putget}).
     \label{fig:putget}
 \end{figure}
 
-Each node knows exactly which range of key to store thank to an md5 hash. The md5 function is in the node class and for each key an hash value is provided.
-To be sure that the node is working on the key that is supposed to be for him, this method was implemented:
-
-\begin{lstlisting}
- def responsible_for_key(key):
-        key_hash = node_hash(key)
-        rank_resp = key_hash % self.node_count
-        return rank_responsible == self.rank
-\end{lstlisting}
-Where the function \textit{node\_hash(key)} takes care of converting a given key into a md5 hashed value and \textit{rank\_resp} is the node which is responsible to execute the requested operation, obtained using the module function on the total number of nodes.
-\newline
-A function \textit{hash()} exists already in python libraries but we used the md5 cryptographic hashing for problems related to security for the possible future implementations.
+The node's logic is split across two classes: \textit{NodeCore} and
+\textit{NodeHttpHandler}. \textit{NodeCore} includes the core logic of deciding
+when to store a key and when to forward a request to the next node.
+\textit{NodeHttpHandler} includes the logic of interpreting HTTP requests and
+formatting HTTP responses. This separation of logic makes it possible to verify
+the core algorithm with isolated unit tests, without having to set up HTTP
+servers.
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.5\textwidth]{node}
-    \caption{Implementation of the Node}
+    \caption{Implementation of Individual Node}
     \label{fig:node}
+\end{figure}
+
+
+For hashing, the node uses the MD5 algorithm to map the string key to a numeric
+value, then takes that large integer modulo the number of nodes to get a node
+number (Fig \ref{fig:hash_algo}). As a cryptographic algorithm, it is
+deterministic and it will evenly distribute the keys. MD5 is also
+fast\cite{md5rfc}, so it will not slow down lookups unnecessarily. And though it
+no longer considered suitable for security applications\cite{md5badrfc}, it is
+not being used for security here. We merely need to decide which node should
+store a given key.
+
+\begin{figure}[h!]
+\caption{Pseudocode of Core Node Logic}
+\begin{lstlisting}
+node_responsible = MD5(key) % node_count
+if node_responsible == self.rank
+then
+    save or retrieve value
+else
+    forward request to next node
+\end{lstlisting}
+\label{fig:hash_algo}
 \end{figure}
 
 
