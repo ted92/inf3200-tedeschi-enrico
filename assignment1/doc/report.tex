@@ -10,6 +10,7 @@
 \usepackage{listings}
 \usepackage{color}
 \usepackage{natbib}
+\usepackage{caption}
 
 % Your names in the header
 \pagestyle{fancy}
@@ -252,25 +253,42 @@ synchronously on just a few nodes might be acceptable.
 
 
 \section{Evaluation}
+For the evaluation node scaling has been considered. The function \textit{storage\_frontend} has been timed sending five hundred requests (GET/PUT) to the nodes network. The evaluation has been done considering the scale on the number of nodes and for each, 10 tests were taken into consideration.
+\newline
+The number of nodes and the average time of 10 computations is represented in the table in Fig \ref{tab:scaling}.
 
-% TODO: time actual implementation
+\begin{figure}[h!]
+\centering
+% \renewcommand{\figurename}{Fig.}
+\caption{Nodes/Time scaling table}
+\begin{tabular}[H]{ | l | l | }
+\hline
+	Nodes & Time \\ \hline
+	2 & 5.7923 \\ \hline
+	4 & 6.4793 \\ \hline
+	6 & 8.1309 \\ \hline
+	10 & 13.0746 \\ \hline
+	15 & 17.0469 \\ \hline
+	20 & 19.3472 \\ \hline
+	30 & 29.4729 \\ \hline
+	40 & 35.2886 \\ \hline
+\end{tabular}
+\label{tab:scaling}
+\end{figure}
+
+In the Fig \ref{fig:scaling} instead the graphic of this scaling test is characterized. As it shows, the time taken to compute grows linearly with the number of the nodes ($O(n)$).
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[trim=0cm 9cm 0cm 11cm, width=0.5\textwidth]{scaling}
+    \caption{Scaling considering the number of nodes in the network}
+    \label{fig:scaling}
+\end{figure}
 
 
 \section{Conclusion}
 
 % TODO: Conclusion
-
-
-\section{CITATION PLACEHOLDER}
-
-% TODO: Remove section
-This text is only here to hang some citations before they're used in the real
-text.
-\cite{linuxjournal_dht}
-\cite{chord}
-\cite{parallel}
-\cite{Balakrishnan:2003:LUD:606272.606299}
-
 
 \bibliographystyle{plain}
 \bibliography{report}
