@@ -10,6 +10,7 @@ import socket
 import httplib
 import random
 import string
+import time
 
 import node_request
 
@@ -111,7 +112,8 @@ class FrontendHTTPServer(BaseHTTPServer.HTTPServer):
 		
 class StorageServerTest:
 
-	testsToRun = 100
+	# requests
+	testsToRun = 6000
 
 	def __init__(self, url, portnumber):
 		self.url = url
@@ -191,7 +193,10 @@ class StorageServerTest:
 		return True
 		
 if __name__ == '__main__':
-	
+
+	# time the function for the evaluation
+	time_start = time.time()
+
 	run_tests = False
 	httpserver_port = 8000
 	
@@ -239,6 +244,9 @@ if __name__ == '__main__':
 		tests.run()
 
 		httpd.stop()
+
+	# print the evaluation time
+	print ("---%s seconds ---" % (time.time() - start_time))
 	# Wait for server thread to exit
 	server_thread.join(100)
 
