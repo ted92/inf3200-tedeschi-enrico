@@ -104,9 +104,10 @@ Our data store \ldots
 
 We arranged our key space along one dimension in a ring, following the lead of
 Chord\cite{chord}. Regions of the key space are assigned to each node. Each node
-is aware of the range of key space that it is responsible and the next node in
-the ring (Fig \ref{fig:design}). If a node receives a request to store or retrieve a key that is not in
-its range, it will forward the request to the next node.
+is aware of the range of key space that it is responsible for, and also the next
+node in the ring (Fig \ref{fig:design}). If a node receives a request to store
+or retrieve a key that is not in its range, it will forward the request to the
+next node.
 
 Though our design was inspired by Chord, we did not implement Chord's finger
 table optimization, for lack of time.
@@ -131,8 +132,8 @@ next node. This was the easiest to implement, but it is wasteful of resources.
 
 \subsection{Languages and Code}
 
-Our solution is implemented in a mix of Python and shell script, Python for the
-actual node and front-end programs, and a shell script to start up and shut down
+Our solution is implemented in a mix of Python and Bash script, Python for the
+actual node and front-end programs, and a Bash script to start up and shut down
 nodes via SSH.
 
 We started with skeleton code by our teaching assistants, Einar Holsbø Jakobsen
@@ -141,9 +142,12 @@ shell script. Their front-end also included an automated test routine that
 rapidly inserted and retrieved random key-value pairs.
 
 We wrote the actual storage node code, and we also made a few enhancements to
-the startup shell script. We modified the startup script to pick a randomized
-set of computers from the cluster for each test run. This randomization was to
-prevent our test runs from occupying too much time on any particular machines.
+the startup shell script. We modified the startup script to accept its list of
+nodes from the command line, rather than a list inside the script itself. We
+also added another short script to pick random hosts from the cluster and print
+them as a list ready to be copied and pasted into the command line. This made it
+easier to randomize which hosts in the cluster we were using, in hopes of
+minimizing conflict with other users on the cluster.
 
 
 \subsection{Network Protocol}
@@ -152,7 +156,7 @@ The backend nodes accept and retrieve data through a simple HTTP API. HTTP's PUT
 and GET operations are a natural fit for a key-value store, as their semantics
 specify storing and retrieving documents (value) at a given URL path (key).
 Jakobsen and Stenhaug chose this protocol for their starter front-end node and
-we expanded it to the storage nodes.
+we reused it for the storage nodes.
 
 
 \subsection{Persistence}
@@ -163,10 +167,14 @@ actually persist stored data between runs. So, for simplicity, we did not
 implement any kind of data persistence. Data is simply stored in memory and the
 store starts empty on each test run.
 
+
 \subsection{Frontend}
 
-The \textit{Frontend Node} (Fig \ref{fig:frontend}) has been modified considering an approach more close to the reality. It takes as input a list of nodes and a random one is chosen to get the requests.
-In that way a distributed transparency is provided since it doesn't matter from which node the frontend will connect because it will get the result anyway by reason of the nodes are communicating each others.
+As specified in the requirements, the \textit{Frontend Node} (Fig
+\ref{fig:frontend}) contacts a random backend node for each request, and the
+backend nodes must cooperate to handle the request. This randomness enforces the
+distribution transparency of the data store. The system can store and retrieve
+keys as a whole, no matter which individual node is contacted.
 
 \begin{figure}[h!]
   \centering
@@ -177,8 +185,13 @@ In that way a distributed transparency is provided since it doesn't matter from 
 
 \subsection{Node}
 
-Each node (Fig \ref{fig:node}) has a really simple workflow. It starts running and waits for a request, which could be GET or PUT from the \textit{Frontend} node. A class \textit{node\_request} has been implemented to keep the \textit{http} logic separates from the node logic, having in that way an easier approach to the testing part and avoiding to have a fat class, respecting a principle of the design pattern.
-When the node gets a request it checks if is supposed to be for him, if yes then the request will be executed and the response is sent to the Frontend, otherwise the Node forward the request through the class \textit{node\_request} to the next node (Fig \ref{fig:putget}).
+Each node (Fig \ref{fig:node}) has a simple workflow. It starts running and
+waits for a request, which could be GET or PUT from the frontend node or another
+backend node. For each request, the node hashes the key into the linear key
+space, and checks if it falls within the region assigned to that node. If so,
+the node handles the request by storing the value (for PUT) or returning a
+previously stored value (for GET). If the key does not fall in the node's
+assigned range, it forwards the request to the next node (Fig \ref{fig:putget}).
 
 \begin{figure}[h!]
   \centering
