@@ -87,28 +87,34 @@ Our data store \ldots
 
 \section{Technical Background}
 
+The basic goal of a distributed database is to coordinate computers so that they
+function as if they were a single machine. In a peer-to-peer system with no
+designated master node, there must be a deterministic algorithm, shared by all
+nodes, that decides which node or nodes should store which values. Each node
+must be able to determine whether or not it should be responsible for a given
+bit of data, and if not, it must be able to forward the request to the node that
+is. With a large number of nodes, it becomes impractical for all nodes to keep a
+list of all of the others, so each node will only keep a list of a small number
+of neighbors, and the distributed algorithm will have to route requests through
+this network of neighbor nodes to the correct location. \cite{p2plookup}
 
+A key-value store lends itself well to this kind of peer-to-peer system, because
+the set of possible keys can be viewed as a space to be divided into regions to
+be handled by different nodes. The whole system then functions as a distributed
+hash table, or DHT. The key questions in designing a DHT system are how the key
+space should be divided among nodes, and which nodes should be neighbors and
+communicate. \cite{p2plookup}
 
-\begin{itemize} 
-\item[--] Distributed systems concept
-\item[--] Basic programming approach
-\item[--] Knowledge of Python language
-\item[--] Notion of design pattern principles
-\item[--] Theory about software engineering
-\item[--] Knowledge of git to manage the software versions
-\item[--] Notion of Chord architecture
-\item[--] Basic approach to Linux command line
-\end{itemize}
 
 
 \section{Design}
 
-We arranged our key space along one dimension in a ring, following the lead of
-Chord\cite{chord}. Regions of the key space are assigned to each node. Each node
-is aware of the range of key space that it is responsible for, and also the next
-node in the ring (Fig \ref{fig:design}). If a node receives a request to store
-or retrieve a key that is not in its range, it will forward the request to the
-next node.
+In our project, we arranged our key space along one dimension in a ring,
+following the lead of Chord\cite{chord}. Regions of the key space are assigned
+to each node. Each node is aware of the range of key space that it is
+responsible for, and also the next node in the ring (Fig \ref{fig:design}). If a
+node receives a request to store or retrieve a key that is not in its range, it
+will forward the request to the next node.
 
 Though our design was inspired by Chord, we did not implement Chord's finger
 table optimization, for lack of time.
