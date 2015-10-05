@@ -113,7 +113,7 @@ class FrontendHTTPServer(BaseHTTPServer.HTTPServer):
 class StorageServerTest:
 
 	# requests
-	testsToRun = 6000
+	testsToRun = 100
 
 	def __init__(self, url, portnumber):
 		self.url = url
