@@ -1,3 +1,3 @@
-# 1st mandatory assignment: key value store
+# 2nd mandatory assignment: leader election
 
-The assignmet text is in `doc/info`; precode is in `src/precode`.
+The assignmet text is in `doc/info`
