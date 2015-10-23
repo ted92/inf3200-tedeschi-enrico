@@ -33,9 +33,9 @@ class NodeDescriptor:
     """ Essential data about a node (IP, port) that is hashed to obtain its rank """
 
     def __init__(self, ip=None, port=None, ip_port=None):
-        if ip and port:
+        if ip!=None and port!=None:
             (self.ip, self.port) = (ip, port)
-        elif ip_port:
+        elif ip_port!=None:
             (self.ip, self.port) = ip_port.split(":")
         else:
             raise RuntimeError( "Bad NodeDescriptor: ip='%s', port='%s', ip_port='%s'" % (ip, port, ip_port) )
@@ -73,22 +73,40 @@ class ForwardRequest:
 #
 class NodeCore:
 
-    def __init__(self, node_count, rank, next_node):
+    def __init__(self, node_count, rank, next_node, desc=None, predecessor=None, succesor=None):
         self.map = dict()
-        self.node_count = long(node_count)
-        self.rank = long(rank)
-        self.next_node = next_node
 
-    # Hashes the key into the key space and decides if this key is in range to
-    # be handled by this node.
+        if desc:
+            self.desc = desc
+            self.predecessor = predecessor
+            self.successor = successor
+        else:
+            self.node_count = long(node_count)
+            self.rank = long(rank)
+            self.next_node = next_node
+
+            long_max_digit = 100000000000000000000000000000000000000L
+
+            self.desc = NodeDescriptor(ip="127.0.0.1", port=rank)
+            self.desc.rank = rank * long_max_digit
+
+            if rank+1 < node_count:
+                next_rank = rank+1
+            else:
+                next_rank = 0
+
+            self.successor = NodeDescriptor(ip=next_node, port=next_rank)
+            self.successor.rank = next_rank * long_max_digit
+
     def responsible_for_key(self, key):
-        # First hash the key using a standard hashing algorithm.
-        # Then do a modulo operation on the number of nodes in the cluster.
-        # This effectively maps the key to a key space of integers from 0 to n-1.
-        # Each node is responsible for one integer in this key space.
+        """ Hashes the key and decides if the hash is in range to be handled by this node """
         key_hash = node_hash(key)
-        rank_responsible = key_hash % self.node_count
-        return rank_responsible == self.rank
+        if (self.desc.rank < self.successor.rank):
+            # Normal
+            return self.desc.rank <= key_hash and key_hash < self.successor.rank
+        else:
+            # Wrap-around
+            return self.desc.rank <= key_hash or key_hash < self.successor.rank
 
 
     # Handle a request to store a key-value pair
@@ -230,7 +248,10 @@ if __name__ == '__main__':
     # sys.argv[1] --> node_count
     # sys.argv[2] --> rank
     # sys.argv[3] --> next_node
-    node = NodeCore(sys.argv[1], sys.argv[2], sys.argv[3])
+    node_count = sys.argv[1]
+    rank = sys.argv[2]
+    next_node = sys.argv[3]
+    node = NodeCore(node_count, rank, next_node)
 
     # Start the webserver which handles incomming requests
     try:

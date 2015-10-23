@@ -44,16 +44,19 @@ class TestNodeDescriptor(unittest.TestCase):
         self.assertEqual(nd.rank, 102808487155392830909659332955855849052L)
 
 
-def hash_modulus(key, node_count):
-    return node.node_hash(key) % node_count
-
-def find_key_with_modulus(modulus, count):
+def key_ranked(modulus, count):
+    long_max_digit = 100000000000000000000000000000000000000L
     TRIES_LIMIT=1000
     for i in range(0, TRIES_LIMIT):
         key = str(i)
-        if (node.node_hash(key) % count == modulus):
+        if (node.node_hash(key) / long_max_digit == modulus):
             return key
     raise Exception("Could not generate an appropriate key")
+
+def node_ranked(rank, count):
+    desc = node.NodeDescriptor(ip="127.0.0.1", port=rank)
+    desc.rank = rank
+    return desc
 
 
 class TestNodeCore(unittest.TestCase):
@@ -62,7 +65,7 @@ class TestNodeCore(unittest.TestCase):
         node_count = 5
         rank = 0
         next_node = "NEXT"
-        key = find_key_with_modulus(rank, node_count)
+        key = key_ranked(rank, node_count)
 
         node_core = node.NodeCore(node_count, rank, next_node)
         self.assertEqual(node_core.responsible_for_key(key), True)
@@ -71,7 +74,7 @@ class TestNodeCore(unittest.TestCase):
         node_count = 5
         rank = 0
         next_node = "NEXT"
-        key = find_key_with_modulus(1, node_count)
+        key = key_ranked(1, node_count)
 
         node_core = node.NodeCore(node_count, rank, next_node)
         self.assertEqual(node_core.responsible_for_key(key), False)
@@ -81,7 +84,7 @@ class TestNodeCore(unittest.TestCase):
         node_count = 5
         rank = 0
         next_node = "NEXT"
-        key = find_key_with_modulus(1, node_count)
+        key = key_ranked(1, node_count)
         value = "THIS IS A TEST VALUE"
 
         node_core = node.NodeCore(node_count, rank, next_node)
@@ -97,7 +100,7 @@ class TestNodeCore(unittest.TestCase):
         node_count = 5
         rank = 0
         next_node = "NEXT"
-        key = find_key_with_modulus(1, node_count)
+        key = key_ranked(1, node_count)
         value = "THIS IS A TEST VALUE"
 
         node_core = node.NodeCore(node_count, rank, next_node)
@@ -113,7 +116,7 @@ class TestNodeCore(unittest.TestCase):
         node_count = 5
         rank = 0
         next_node = "NEXT"
-        key = find_key_with_modulus(rank, node_count)
+        key = key_ranked(rank, node_count)
         value = "THIS IS A TEST VALUE"
 
         node_core = node.NodeCore(node_count, rank, next_node)
@@ -134,7 +137,7 @@ class TestNodeCore(unittest.TestCase):
         node_count = 5
         rank = 0
         next_node = "NEXT"
-        key = find_key_with_modulus(rank, node_count)
+        key = key_ranked(rank, node_count)
 
         node_core = node.NodeCore(node_count, rank, next_node)
         result = node_core.do_get(key)
@@ -149,7 +152,7 @@ class TestNodeCore(unittest.TestCase):
         node1 = node.NodeCore(3, 1, 'node2')
         node2 = node.NodeCore(3, 2, 'node0')
 
-        key = find_key_with_modulus(2, 3)
+        key = key_ranked(2, 3)
         value = "THIS IS A TEST VALUE"
 
         result = node0.do_put(key,value)
@@ -167,7 +170,7 @@ class TestNodeCore(unittest.TestCase):
         node1 = node.NodeCore(3, 1, 'node2')
         node2 = node.NodeCore(3, 2, 'node0')
 
-        key = find_key_with_modulus(0, 3)
+        key = key_ranked(0, 3)
         value = "THIS IS A TEST VALUE"
 
         result = node1.do_put(key,value)
