@@ -28,6 +28,24 @@ def node_hash(s):
     return numerichash
 
 
+
+class NodeDescriptor:
+    """ Essential data about a node (IP, port) that is hashed to obtain its rank """
+
+    def __init__(self, ip=None, port=None, ip_port=None):
+        if ip and port:
+            (self.ip, self.port) = (ip, port)
+        elif ip_port:
+            (self.ip, self.port) = ip_port.split(":")
+        else:
+            raise RuntimeError( "Bad NodeDescriptor: ip='%s', port='%s', ip_port='%s'" % (ip, port, ip_port) )
+
+        self.rank = node_hash(str(self))
+
+    def __str__(self):
+        return "%s:%s" % (self.ip, self.port)
+
+
 # ----------------------------------------------------------
 # Small classes that represent node search results
 #

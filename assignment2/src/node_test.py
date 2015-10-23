@@ -19,6 +19,30 @@ class TestNodeHashing(unittest.TestCase):
         self.assertEqual(hash_a, hash_b)
 
 
+class TestNodeDescriptor(unittest.TestCase):
+
+    def test_construct(self):
+        nd = node.NodeDescriptor(ip="127.0.0.1", port="8000")
+        self.assertEqual(nd.ip, "127.0.0.1")
+        self.assertEqual(nd.port, "8000")
+
+    def test_parse(self):
+        nd = node.NodeDescriptor(ip_port="127.0.0.1:8000")
+        self.assertEqual(nd.ip, "127.0.0.1")
+        self.assertEqual(nd.port, "8000")
+
+    def test_bad_construct(self):
+        self.assertRaises(RuntimeError, node.NodeDescriptor)
+
+    def test_string(self):
+        nd = node.NodeDescriptor("127.0.0.1", "8000")
+        self.assertEqual(str(nd), "127.0.0.1:8000")
+
+    def test_rank(self):
+        nd = node.NodeDescriptor(ip_port="127.0.0.1:8000")
+        self.assertEqual(nd.rank, node.node_hash("127.0.0.1:8000"))
+        self.assertEqual(nd.rank, 102808487155392830909659332955855849052L)
+
 
 def hash_modulus(key, node_count):
     return node.node_hash(key) % node_count
