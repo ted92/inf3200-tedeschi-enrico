@@ -19,16 +19,11 @@ MAX_STORAGE_SIZE = 104857600	# Maximum total storage allowed (100 megabytes)
 
 node_httpserver_port = 8000
 
-# Convenience method to concisely hash a string with MD5
-def md5_string(s):
-    md5 = hashlib.md5()
-    md5.update(s)
-    digest = md5.hexdigest()
-    return digest
-
 # Hashing function to map string keys to an integer key space
 def node_hash(s):
-    hexhash = md5_string(s)
+    md5 = hashlib.md5()
+    md5.update(s)
+    hexhash = md5.hexdigest()
     numerichash = long(hexhash,16)
     return numerichash
 
@@ -54,6 +49,9 @@ class ForwardRequest:
 # Core logic of a node.
 #
 # Separated from HTTP handling for easier testing.
+#
+# On this level, node IDs are node rank, and they are numeric values found by
+# hashing the relevant data (IP:port,etc) on the server level.
 #
 class NodeCore:
 
