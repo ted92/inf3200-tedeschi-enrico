@@ -44,7 +44,8 @@ class TestNodeDescriptor(unittest.TestCase):
         self.assertEqual(nd.rank, 102808487155392830909659332955855849052L)
 
 
-def key_ranked(modulus, count):
+def key_ranked(*args):
+    modulus = args[0]
     long_max_digit = 100000000000000000000000000000000000000L
     TRIES_LIMIT=1000
     for i in range(0, TRIES_LIMIT):
@@ -53,21 +54,18 @@ def key_ranked(modulus, count):
             return key
     raise Exception("Could not generate an appropriate key")
 
-def node_ranked(rank, count):
+def node_ranked(rank):
     desc = node.NodeDescriptor(ip="127.0.0.1", port=rank)
-    desc.rank = rank
+    long_max_digit = 100000000000000000000000000000000000000L
+    desc.rank = rank * long_max_digit
     return desc
 
 
 class TestNodeCore(unittest.TestCase):
 
     def test_responsible_for_key_not_found(self):
-        node_count = 5
-        rank = 0
-        next_node = "NEXT"
-        key = key_ranked(rank, node_count)
-
-        node_core = node.NodeCore(node_count, rank, next_node)
+        node_core = node.NodeCore(desc=node_ranked(0), successor=node_ranked(1))
+        key = key_ranked(0)
         self.assertEqual(node_core.responsible_for_key(key), True)
 
     def test_responsible_for_key_negative(self):
@@ -81,35 +79,33 @@ class TestNodeCore(unittest.TestCase):
 
 
     def test_not_responsible_put(self):
-        node_count = 5
-        rank = 0
-        next_node = "NEXT"
-        key = key_ranked(1, node_count)
-        value = "THIS IS A TEST VALUE"
+        current =node_ranked(0)
+        successor = node_ranked(1)
+        node_core = node.NodeCore(desc=current, successor=successor)
 
-        node_core = node.NodeCore(node_count, rank, next_node)
+        key = key_ranked(1)
+        value = "THIS IS A TEST VALUE"
 
         # put value
         result = node_core.do_put(key,value)
         self.assertEqual(isinstance(result, node.ForwardRequest), True,
             "Expected ForwardRequest, got " + pformat(result))
-        self.assertEqual(result.destination, "NEXT")
+        self.assertEqual(result.destination, successor)
 
 
     def test_not_responsible_get(self):
-        node_count = 5
-        rank = 0
-        next_node = "NEXT"
-        key = key_ranked(1, node_count)
-        value = "THIS IS A TEST VALUE"
+        current = node_ranked(0)
+        successor = node_ranked(1)
+        node_core = node.NodeCore(desc=current, successor=successor)
 
-        node_core = node.NodeCore(node_count, rank, next_node)
+        key = key_ranked(1)
+        value = "THIS IS A TEST VALUE"
 
         # put value
         result = node_core.do_get(key)
         self.assertEqual(isinstance(result, node.ForwardRequest), True,
             "Expected ForwardRequest, got " + pformat(result))
-        self.assertEqual(result.destination, "NEXT")
+        self.assertEqual(result.destination, successor)
 
 
     def test_responsible_put_get(self):
@@ -148,36 +144,44 @@ class TestNodeCore(unittest.TestCase):
 
 
     def test_ring_config_linear(self):
-        node0 = node.NodeCore(3, 0, 'node1')
-        node1 = node.NodeCore(3, 1, 'node2')
-        node2 = node.NodeCore(3, 2, 'node0')
+        d0 = node_ranked(0)
+        d1 = node_ranked(1)
+        d2 = node_ranked(2)
 
-        key = key_ranked(2, 3)
+        node0 = node.NodeCore(desc=d0, successor=d1)
+        node1 = node.NodeCore(desc=d1, successor=d2)
+        node2 = node.NodeCore(desc=d2, successor=d0)
+
+        key = key_ranked(2)
         value = "THIS IS A TEST VALUE"
 
         result = node0.do_put(key,value)
-        self.assertEqual(result.destination, "node1")
+        self.assertEqual(result.destination, d1)
 
         result = node1.do_put(key,value)
-        self.assertEqual(result.destination, "node2")
+        self.assertEqual(result.destination, d2)
 
         result = node2.do_put(key,value)
         self.assertEqual(isinstance(result, node.ValueStored), True)
 
 
     def test_ring_config_wrap_around(self):
-        node0 = node.NodeCore(3, 0, 'node1')
-        node1 = node.NodeCore(3, 1, 'node2')
-        node2 = node.NodeCore(3, 2, 'node0')
+        d0 = node_ranked(0)
+        d1 = node_ranked(1)
+        d2 = node_ranked(2)
 
-        key = key_ranked(0, 3)
+        node0 = node.NodeCore(desc=d0, successor=d1)
+        node1 = node.NodeCore(desc=d1, successor=d2)
+        node2 = node.NodeCore(desc=d2, successor=d0)
+
+        key = key_ranked(0)
         value = "THIS IS A TEST VALUE"
 
         result = node1.do_put(key,value)
-        self.assertEqual(result.destination, "node2")
+        self.assertEqual(result.destination, d2)
 
         result = node2.do_put(key,value)
-        self.assertEqual(result.destination, "node0")
+        self.assertEqual(result.destination, d0)
 
         result = node0.do_put(key,value)
         self.assertEqual(isinstance(result, node.ValueStored), True)

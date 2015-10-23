@@ -40,10 +40,13 @@ class NodeDescriptor:
         else:
             raise RuntimeError( "Bad NodeDescriptor: ip='%s', port='%s', ip_port='%s'" % (ip, port, ip_port) )
 
-        self.rank = node_hash(str(self))
+        self.rank = node_hash(repr(self))
+
+    def __repr__(self):
+        return "%s:%s" % (self.ip, self.port)
 
     def __str__(self):
-        return "%s:%s" % (self.ip, self.port)
+        return repr(self)
 
 
 # ----------------------------------------------------------
@@ -73,14 +76,23 @@ class ForwardRequest:
 #
 class NodeCore:
 
-    def __init__(self, node_count, rank, next_node, desc=None, predecessor=None, succesor=None):
+    def __init__(self, *args, **kwargs):
+        # desc=None, predecessor=None, succesor=None):
         self.map = dict()
 
-        if desc:
+        if "desc" in kwargs:
+            desc = kwargs['desc']
+            predecessor = kwargs["predecessor"] if "predecessor" in kwargs else None
+            successor = kwargs["successor"] if "successor" in kwargs else None
+
             self.desc = desc
             self.predecessor = predecessor
             self.successor = successor
         else:
+            node_count = args[0]
+            rank = args[1]
+            next_node = args[2]
+
             self.node_count = long(node_count)
             self.rank = long(rank)
             self.next_node = next_node
@@ -119,7 +131,7 @@ class NodeCore:
             self.map[key] = value
             return ValueStored()
         else:
-            return ForwardRequest(self.next_node)
+            return ForwardRequest(self.successor)
 
     # Handle a request to look up a key
     #
@@ -134,7 +146,7 @@ class NodeCore:
             if value: return ValueFound(value)
             else: return ValueNotFound()
         else:
-            return ForwardRequest(self.next_node)
+            return ForwardRequest(self.successor)
 
 
 
