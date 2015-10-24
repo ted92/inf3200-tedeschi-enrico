@@ -95,37 +95,40 @@ class TestNodeCore(unittest.TestCase):
         d1 = node_ranked(1);    n1 = node.NodeCore(d1)
 
         # Join nodes 0 and 1
-        result = n0.handle_message(node.Join(d0,d1)) [0]
-        n1.handle_message(result)
+        result = n0.handle_message(node.Join(d0,d1))
+        msg = result[0]
+        n1.handle_message(msg)
 
         k1 = key_ranked(1)
         self.assertEqual(n0.responsible_for_key(k1), False)
         self.assertEqual(n1.responsible_for_key(k1), True)
 
-'''
     def test_join_double_direct(self):
         d0 = node_ranked(0);    n0 = node.NodeCore(d0)
         d1 = node_ranked(1);    n1 = node.NodeCore(d1)
         d2 = node_ranked(2);    n2 = node.NodeCore(d2)
 
         # Join nodes 0 and 1
-        result = n0.handle_request(node.Join(d1))
-        n1.handle_request(result)
+        result = n0.handle_message(node.Join(d0, d1))
+        msg = result[0]
+        n1.handle_message(msg)
 
         # Add node 2 at 1
-        result = n1.handle_request(node.Join(d2))
+        result = n1.handle_message(node.Join(d1, d2))
+        msg = result[0]
 
-        # Node 1 should accept the request
-        self.assertEqual(isinstance(result, node.JoinAccepted), True)
-        self.assertEqual(result.successor, d0)
+        # Node 1 should accept the message
+        self.assertEqual(isinstance(msg, node.JoinAccepted), True)
+        self.assertEqual(msg.successor, d0)
 
         # Node 1 should accept node 2 as its new successor
         self.assertEqual(n1.successor, d2)
 
         # New node (2) should take the given node as its successor
-        n2.handle_request(result)
+        n2.handle_message(msg)
         self.assertEqual(n2.successor, d0)
 
+'''
     def test_join_double_indirect(self):
         d0 = node_ranked(0);    n0 = node.NodeCore(d0)
         d1 = node_ranked(1);    n1 = node.NodeCore(d1)
