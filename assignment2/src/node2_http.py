@@ -53,13 +53,6 @@ def parse_single_node_descriptor(s):
     return ncore.NodeDescriptor(host_port = s.strip())
 
 
-def parse_request(hr):
-    """ Parse an HttpRequest to one of the node message types """
-
-    if hr.path=="join" and hr.method=="POST":
-        new_node = parse_single_node_descriptor(hr.body)
-        return ncore.Join(destination=hr.destination, new_node=new_node)
-
 def build_request(msg):
     """ Build an HttpRequest for a node message """
 
@@ -70,12 +63,38 @@ def build_request(msg):
                 path = "join",
                 body = msg.new_node.host_port)
 
+    if isinstance(msg, ncore.JoinAccepted):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "POST",
+                path = "join/accepted",
+                body = msg.successor.host_port)
+
+    else:
+        raise RuntimeError("Do not know how to build HTTP for message %s" % (msg,))
+
+
+def parse_request(hr):
+    """ Parse an HttpRequest to one of the node message types """
+
+    if hr.path=="join" and hr.method=="POST":
+        new_node = parse_single_node_descriptor(hr.body)
+        return ncore.Join(destination=hr.destination, new_node=new_node)
+
+    if hr.path=="join/accepted" and hr.method=="POST":
+        successor = parse_single_node_descriptor(hr.body)
+        return ncore.JoinAccepted(destination=hr.destination, successor=successor)
+
+    else:
+        raise RuntimeError("Do not know how to parse request %s %s" % (hr.method, hr.path))
+
+
 
 # Actually Send Requests
 
 def send_message(msg):
     """ Send a message to another node """
-    verbosep("sending %s" % str(msg))
+    verbosep("Sending message: %s" % (msg,))
     hr = build_request(msg)
     send_request(hr)
 
@@ -85,6 +104,7 @@ def send_request(hr):
 
     conn = httplib.HTTPConnection(hr.host, hr.port)
     conn.request(hr.method, hr.path, hr.body)
+    verbosep("Sent request: %s %s '%s'" % (hr.method, hr.path, hr.body))
 
     # Must read response even if we don't do anything with it.
     # If we don't, the server will get broken pipe errors.
@@ -94,10 +114,13 @@ def send_request(hr):
     #	4. Server code tries to finish writing to closed pipe.
     #	5. Broken pipe.
     response = conn.getresponse()
+    verbosep("Reading response")
     data = response.read()
 
     if response.status!=200:
         raise
+
+    verbosep("Done")
 
 
 # Actually Run as a Server
@@ -115,23 +138,25 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.handle_request("POST")
 
     def handle_request(self, method):
-        body = self.rfile.read()
+        verbosep("Receiving request: %s %s" % (method, self.path))
+        content_length = int(self.headers['Content-Length'])
+        body = self.rfile.read(content_length)
         msg = parse_request(HttpRequest(
                 destination = server_node_core.descriptor,
                 method = method,
                 path = self.path,
                 body = body))
 
-        verbosep("received %s" % msg)
+        verbosep("Parsed message: %s" % (msg,))
         action = server_node_core.handle_message(msg)
 
-        respond_ok()
+        self.respond_ok()
         for newmsg in action:
             send_message(newmsg)
 
     def respond_ok(self):
         self.send_response(200)
-        self.end_heaers()
+        self.end_headers()
         self.wfile.write("")
 
 

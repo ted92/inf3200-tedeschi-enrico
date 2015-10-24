@@ -42,5 +42,32 @@ class TestParseBuild(unittest.TestCase):
                 ncore.NodeDescriptor(host_port="localhost:8001"))
 
 
+    def test_build_join_accept(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.JoinAccepted(destination=d1, successor=d0)
+
+        req = nhttp.build_request(msg)
+
+        self.assertEqual(req.method, "POST")
+        self.assertEqual(req.path, "join/accepted")
+        self.assertEqual(req.body, "localhost:8000")
+
+    def test_parse_join_accept(self):
+        receiver = ncore.NodeDescriptor(host_port="localhost:8001")
+        req = nhttp.HttpRequest(
+                destination = receiver,
+                method = "POST",
+                path = "join/accepted",
+                body = "localhost:8000\n")
+
+        msg = nhttp.parse_request(req)
+
+        self.assertEqual(isinstance(msg, ncore.JoinAccepted), True)
+        self.assertEqual(msg.destination, receiver)
+        self.assertEqual(msg.successor,
+                ncore.NodeDescriptor(host_port="localhost:8000"))
+
+
 if __name__ == '__main__':
     unittest.main()
