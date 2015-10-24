@@ -85,11 +85,10 @@ class NodeCore:
         or a list of new messages to send.
         """
 
-        d = self.descriptor
-        s = self.successor
-
         if isinstance(ar, Join):
 
+            d = self.descriptor
+            s = self.successor
             n = ar.new_node
 
             if self.responsible_for_hash(n.rank):
@@ -99,9 +98,11 @@ class NodeCore:
                 return [ JoinAccepted(destination=n, successor=ns) ]
 
             else:
-                ar.destination = s
-                return [ ar ]
+                return [ Join(destination=s, new_node=n) ]
 
-        if isinstance(ar, JoinAccepted):
+        elif isinstance(ar, JoinAccepted):
             self.successor = ar.successor
             return GenericOk()
+
+        else:
+            raise RuntimeError("Unknown message: %s" % ar)
