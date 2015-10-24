@@ -36,20 +36,15 @@ class NodeDescriptor:
         return "%s:%s" % (self.host, self.port)
 
 
-# Abstract Node Requests
+# Node Messages
 
-Join = collections.namedtuple("Join", ["new_node"])
+Join = collections.namedtuple("Join", ["destination", "new_node"])
+JoinAccepted = collections.namedtuple("JoinAccepted", ['destination', 'successor'])
 
 
-# Abstract Node Responses
+# Direct Node Responses
 
 GenericOk = collections.namedtuple("GenericOk", [])
-
-ForwardRequest = collections.namedtuple("ForwardRequest",
-        ['destination','request'])
-
-JoinAccepted = collections.namedtuple("JoinAccepted", ['new_node', 'successor'])
-
 
 
 # Core Logic of Node
@@ -83,8 +78,12 @@ class NodeCore:
             return d.rank <= key_hash or key_hash < s.rank
 
 
-    def handle_request(self, ar):
-        """ Handle a request """
+    def handle_message(self, ar):
+        """ Handle a message
+
+        Returns either a direct response object,
+        or a list of new messages to send.
+        """
 
         d = self.descriptor
         s = self.successor
@@ -97,10 +96,11 @@ class NodeCore:
 
                 ns = s if s else d
                 self.successor = n
-                return JoinAccepted(new_node=n, successor=ns)
+                return [ JoinAccepted(destination=n, successor=ns) ]
 
             else:
-                return ForwardRequest(destination=s, request=ar)
+                ar.destination = s
+                return [ ar ]
 
         if isinstance(ar, JoinAccepted):
             self.successor = ar.successor
