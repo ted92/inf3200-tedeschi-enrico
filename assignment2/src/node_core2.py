@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 
 import hashlib
 import collections
@@ -29,9 +30,8 @@ class NodeDescriptor:
         self.rank = node_hash(self.host_port)
 
     def __repr__(self):
-        return ("<%s.%s %s,%s>"
-            % (self.__class__.__module__, self.__class__.__name__,
-                self.host_port, self.rank))
+        return ("<%s,%s‥>"
+            % (self.host_port, str(self.rank)[0:6]))
 
     def __str__(self):
         return "%s:%s" % (self.host, self.port)

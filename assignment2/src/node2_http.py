@@ -114,13 +114,12 @@ def send_request(hr):
     #	4. Server code tries to finish writing to closed pipe.
     #	5. Broken pipe.
     response = conn.getresponse()
-    verbosep("Reading response")
     data = response.read()
 
     if response.status!=200:
         raise
 
-    verbosep("Done")
+    verbosep("Request OK: %s %s" % (hr.method, hr.path))
 
 
 # Actually Run as a Server
