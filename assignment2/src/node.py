@@ -114,7 +114,10 @@ class NodeCore:
     def responsible_for_key(self, key):
         """ Hashes the key and decides if the hash is in range to be handled by this node """
         key_hash = node_hash(key)
-        if (self.desc.rank < self.successor.rank):
+        if (self.successor == None):
+            # Single node
+            return True
+        elif (self.desc.rank < self.successor.rank):
             # Normal
             return self.desc.rank <= key_hash and key_hash < self.successor.rank
         else:

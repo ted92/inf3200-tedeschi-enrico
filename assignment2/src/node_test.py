@@ -187,6 +187,17 @@ class TestNodeCore(unittest.TestCase):
         self.assertEqual(isinstance(result, node.ValueStored), True)
 
 
+    def test_single_node(self):
+        d0 = node_ranked(0)
+
+        node0 = node.NodeCore(desc=d0)
+
+        key = key_ranked(1)
+        value = "TEST VALUE"
+
+        result = node0.do_put(key,value)
+        self.assertEqual(isinstance(result, node.ValueStored), True)
+
 
 
 if __name__ == '__main__':
