@@ -3,10 +3,49 @@
 
 import httplib
 
+""" Common routines for parsing and sending HTTP reqests to nodes """
 
-# ----------------------------------------------------------
-# Common routines for sending GET and PUT requests to nodes
-#
+# HTTP request object
+
+class Request:
+    def __init__(self, method="GET", path="", body=""):
+        self.method = method
+        self.path = path
+        self.body = body
+
+# Abstract request objects
+
+class RequestGetKey:
+    def __init__(self, key):
+        self.key = key
+
+class RequestPutKey:
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+# Parse and Build -- Convert between HTTP request and abstract types
+
+def parse_request(method, path, body):
+    """ Parses an HTTP method+path+body to a more abstract request object """
+    # if method=="GET" and path.startswith("key/"):
+    if method=="GET":
+        key = path #[4:]
+        return RequestGetKey(key)
+
+    if method=="PUT":
+        key = path #[4:]
+        value = body
+        return RequestPutKey(key, value)
+
+def build_request(ar):
+    """ Converts an abstract request object to an HTTP method+path+body """
+    if isinstance(ar, RequestGetKey):
+        # return Request(method="GET", path="key/"+ar.key)
+        return Request(method="GET", path=ar.key)
+
+    if isinstance(ar, RequestPutKey):
+        return Request(method="PUT", path=ar.key, body=ar.value)
 
 
 # Send a PUT request, to store a key-value pair

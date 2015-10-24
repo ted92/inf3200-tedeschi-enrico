@@ -3,6 +3,7 @@
 
 import unittest
 import node
+import node_request
 from pprint import pformat
 
 class TestNodeHashing(unittest.TestCase):
@@ -246,6 +247,33 @@ class TestNodeCore(unittest.TestCase):
         # Request should be forwarded to the appropriate node
         self.assertEqual(isinstance(result, node.ForwardRequest), True)
         self.assertEqual(result.destination, d1)
+
+
+class TestNodeRequest(unittest.TestCase):
+
+    def test_parse_get_key(self):
+        ar = node_request.parse_request("GET", "12345", "")
+        self.assertEqual(isinstance(ar, node_request.RequestGetKey), True)
+        self.assertEqual(ar.key, "12345")
+
+    def test_build_get_key(self):
+        ar = node_request.RequestGetKey("12345")
+        r = node_request.build_request(ar)
+        self.assertEqual(r.method, "GET")
+        self.assertEqual(r.path, "12345")
+
+    def test_parse_put_key(self):
+        ar = node_request.parse_request("PUT", "12345", "SOME VALUE")
+        self.assertEqual(isinstance(ar, node_request.RequestPutKey), True)
+        self.assertEqual(ar.key, "12345")
+        self.assertEqual(ar.value, "SOME VALUE")
+
+    def test_build_put_key(self):
+        ar = node_request.RequestPutKey("12345", "SOME VALUE")
+        r = node_request.build_request(ar)
+        self.assertEqual(r.method, "PUT")
+        self.assertEqual(r.path, "12345")
+        self.assertEqual(r.body, "SOME VALUE")
 
 
 if __name__ == '__main__':

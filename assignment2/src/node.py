@@ -194,6 +194,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     global node
 
+
     # Handle a GET request, to look up a key
     def do_GET(self):
         # The URL path is the key
