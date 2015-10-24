@@ -34,9 +34,9 @@ class TestNodeDescriptor(unittest.TestCase):
     def test_bad_construct(self):
         self.assertRaises(RuntimeError, node.NodeDescriptor)
 
-    def test_string(self):
+    def test_ip_port(self):
         nd = node.NodeDescriptor("127.0.0.1", "8000")
-        self.assertEqual(str(nd), "127.0.0.1:8000")
+        self.assertEqual(nd.ip_port, "127.0.0.1:8000")
 
     def test_rank(self):
         nd = node.NodeDescriptor(ip_port="127.0.0.1:8000")

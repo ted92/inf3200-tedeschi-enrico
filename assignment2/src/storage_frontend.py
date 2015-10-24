@@ -195,7 +195,7 @@ class StorageServerTest:
 if __name__ == '__main__':
 
 	# time the function for the evaluation
-	time_start = time.time()
+	start_time = time.time()
 
 	run_tests = False
 	httpserver_port = 8000

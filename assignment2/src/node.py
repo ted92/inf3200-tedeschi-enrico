@@ -40,13 +40,14 @@ class NodeDescriptor:
         else:
             raise RuntimeError( "Bad NodeDescriptor: ip='%s', port='%s', ip_port='%s'" % (ip, port, ip_port) )
 
-        self.rank = node_hash(repr(self))
+        self.ip_port = "%s:%s" % (self.ip, self.port)
+        self.rank = node_hash(self.ip_port)
 
     def __repr__(self):
-        return "%s:%s" % (self.ip, self.port)
+        return "%s.%s (%s:%s, %s)" % (self.__class__.__module__, self.__class__.__name__, self.ip, self.port, self.rank)
 
     def __str__(self):
-        return repr(self)
+        return "%s:%s" % (self.ip, self.port)
 
 
 # ----------------------------------------------------------
@@ -89,25 +90,25 @@ class NodeCore:
             self.predecessor = predecessor
             self.successor = successor
         else:
-            node_count = args[0]
-            rank = args[1]
+            node_count = long(args[0])
+            rank = long(args[1])
             next_node = args[2]
 
-            self.node_count = long(node_count)
-            self.rank = long(rank)
+            self.node_count = node_count
+            self.rank = rank
             self.next_node = next_node
 
             long_max_digit = 100000000000000000000000000000000000000L
 
-            self.desc = NodeDescriptor(ip="127.0.0.1", port=rank)
+            self.desc = NodeDescriptor(ip="127.0.0.1", port=node_httpserver_port)
             self.desc.rank = rank * long_max_digit
 
-            if rank+1 < node_count:
-                next_rank = rank+1
-            else:
+            if rank+1 >= node_count:
                 next_rank = 0
+            else:
+                next_rank = rank+1
 
-            self.successor = NodeDescriptor(ip=next_node, port=next_rank)
+            self.successor = NodeDescriptor(ip=next_node, port=node_httpserver_port)
             self.successor.rank = next_rank * long_max_digit
 
     def responsible_for_key(self, key):
@@ -178,7 +179,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif isinstance(result, ForwardRequest):
             # Forward request to specified node
             (status_code, content_type, data) = node_request.sendGET(
-                    result.destination, node_httpserver_port, key)
+                    result.destination.ip, result.destination.port, key)
 
             # Relay response to requesting node
             self.respond(status_code, content_type, data)
@@ -210,7 +211,7 @@ class NodeHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.respond(200, "application/octet-stream", "")
 
         elif isinstance(result, ForwardRequest):
-            node_request.sendPUT(result.destination, node_httpserver_port, key, value)
+            node_request.sendPUT(result.destination.ip, result.destination.port, key, value)
             self.respond(200, "application/octet-stream", "")
 
         else:
@@ -261,7 +262,7 @@ if __name__ == '__main__':
     # sys.argv[2] --> rank
     # sys.argv[3] --> next_node
     node_count = sys.argv[1]
-    rank = sys.argv[2]
+    rank = long(sys.argv[2])
     next_node = sys.argv[3]
     node = NodeCore(node_count, rank, next_node)
 
