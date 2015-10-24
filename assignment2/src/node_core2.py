@@ -17,13 +17,14 @@ class NodeDescriptor:
 
     def __init__(self, host=None, port=None, host_port=None):
         if host!=None and port!=None:
-            (self.host, self.port) = (host, port)
+            (self.host, self.port) = (host.strip(), port)
         elif host_port!=None:
-            (self.host, self.port) = host_port.split(":")
+            (self.host, self.port) = host_port.strip().split(":")
         else:
             raise RuntimeError( "Bad %s: host='%s', port='%s', host_port='%s'"
                 % (self.__class__.__name__, host, port, host_port) )
 
+        self.port = int(self.port)
         self.host_port = "%s:%s" % (self.host, self.port)
         self.rank = node_hash(self.host_port)
 
@@ -34,6 +35,9 @@ class NodeDescriptor:
 
     def __str__(self):
         return "%s:%s" % (self.host, self.port)
+
+    def __eq__(a, b):
+        return isinstance(b,NodeDescriptor) and a.__dict__ == b.__dict__
 
 
 # Node Messages

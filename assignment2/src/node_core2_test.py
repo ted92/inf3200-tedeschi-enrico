@@ -23,18 +23,32 @@ class TestNodeDescriptor(unittest.TestCase):
     def test_construct(self):
         nd = node.NodeDescriptor(host="127.0.0.1", port="8000")
         self.assertEqual(nd.host, "127.0.0.1")
-        self.assertEqual(nd.port, "8000")
+        self.assertEqual(nd.port, 8000)
 
     def test_parse(self):
         nd = node.NodeDescriptor(host_port="127.0.0.1:8000")
         self.assertEqual(nd.host, "127.0.0.1")
-        self.assertEqual(nd.port, "8000")
+        self.assertEqual(nd.port, 8000)
+
+    def test_parse_trim(self):
+        nd = node.NodeDescriptor(host_port="\t\t  127.0.0.1:8000  \n")
+        self.assertEqual(nd.host, "127.0.0.1")
+        self.assertEqual(nd.port, 8000)
+        self.assertEqual(nd.host_port, "127.0.0.1:8000")
 
     def test_bad_construct(self):
         self.assertRaises(RuntimeError, node.NodeDescriptor)
 
     def test_host_port(self):
         nd = node.NodeDescriptor("127.0.0.1", "8000")
+        self.assertEqual(nd.host, "127.0.0.1")
+        self.assertEqual(nd.port, 8000)
+        self.assertEqual(nd.host_port, "127.0.0.1:8000")
+
+    def test_host_port_trim(self):
+        nd = node.NodeDescriptor("\t 127.0.0.1  \n", "\t 8000 \n")
+        self.assertEqual(nd.host, "127.0.0.1")
+        self.assertEqual(nd.port, 8000)
         self.assertEqual(nd.host_port, "127.0.0.1:8000")
 
     def test_rank(self):
@@ -42,6 +56,32 @@ class TestNodeDescriptor(unittest.TestCase):
         self.assertEqual(nd.rank, node.node_hash("127.0.0.1:8000"))
         self.assertEqual(nd.rank, 102808487155392830909659332955855849052L)
 
+    def test_equal_a_b_true(self):
+        d0 = node.NodeDescriptor(host_port="127.0.0.1:8000")
+        d1 = node.NodeDescriptor(host_port="127.0.0.1:8000")
+        self.assertEqual(d0,d1)
+
+    def test_equal_a_b_different_host(self):
+        d0 = node.NodeDescriptor(host_port="127.0.0.1:8000")
+        d1 = node.NodeDescriptor(host_port="127.0.0.2:8000")
+        self.assertNotEqual(d0,d1)
+
+    def test_equal_a_b_different_port(self):
+        d0 = node.NodeDescriptor(host_port="127.0.0.1:8000")
+        d1 = node.NodeDescriptor(host_port="127.0.0.1:8001")
+        self.assertNotEqual(d0,d1)
+
+    def test_equal_a_b_aNone(self):
+        d0 = None
+        d1 = node.NodeDescriptor(host_port="127.0.0.1:8000")
+        self.assertNotEqual(d0,d1)
+        self.assertEqual(None, d0)
+
+    def test_equal_a_b_bNone(self):
+        d0 = node.NodeDescriptor(host_port="127.0.0.1:8000")
+        d1 = None
+        self.assertNotEqual(d0,d1)
+        self.assertEqual(d1, None)
 
 long_max_digit = 100000000000000000000000000000000000000L
 
