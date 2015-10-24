@@ -199,6 +199,54 @@ class TestNodeCore(unittest.TestCase):
         self.assertEqual(isinstance(result, node.ValueStored), True)
 
 
+    def test_join_single(self):
+        d0 = node_ranked(0)
+        d1 = node_ranked(1)
+        node0 = node.NodeCore(desc=d0)
+        node1 = node.NodeCore(desc=d1)
+
+        result = node0.join_request(d1)
+        self.assertEqual(isinstance(result, node.JoinAccepted), True)
+        self.assertEqual(result.successor, d0)
+
+        # First node accepts new node as its successor
+        self.assertEqual(node0.successor, d1)
+
+        # New node takes existing node as its successor
+        node1.join_accepted(result)
+        self.assertEqual(node1.successor, d0)
+
+    def test_join_double_direct(self):
+        d0 = node_ranked(0)
+        d1 = node_ranked(1)
+        d2 = node_ranked(2)
+        node0 = node.NodeCore(desc=d0, successor=d1)
+        node1 = node.NodeCore(desc=d1, successor=d0)
+        node2 = node.NodeCore(desc=d2)
+
+        result = node1.join_request(d2)
+        self.assertEqual(isinstance(result, node.JoinAccepted), True)
+        # First node accepts new node as its successor
+        self.assertEqual(result.successor, d0)
+
+        # New node takes existing node as its successor
+        node2.join_accepted(result)
+        self.assertEqual(node2.successor, d0)
+
+    def test_join_double_forward(self):
+        d0 = node_ranked(0)
+        d1 = node_ranked(1)
+        d2 = node_ranked(2)
+        node0 = node.NodeCore(desc=d0, successor=d1)
+        node1 = node.NodeCore(desc=d1, successor=d0)
+        node2 = node.NodeCore(desc=d2)
+
+        result = node0.join_request(d2)
+
+        # Request should be forwarded to the appropriate node
+        self.assertEqual(isinstance(result, node.ForwardRequest), True)
+        self.assertEqual(result.destination, d1)
+
 
 if __name__ == '__main__':
     unittest.main()

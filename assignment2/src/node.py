@@ -51,7 +51,7 @@ class NodeDescriptor:
 
 
 # ----------------------------------------------------------
-# Small classes that represent node search results
+# Small classes that represent node request results
 #
 
 class ValueFound:
@@ -65,6 +65,10 @@ class ValueStored: pass
 class ForwardRequest:
     def __init__(self, destination):
         self.destination = destination
+
+class JoinAccepted:
+    def __init__(self, successor=None):
+        self.successor = successor
 
 
 # ----------------------------------------------------------
@@ -114,6 +118,10 @@ class NodeCore:
     def responsible_for_key(self, key):
         """ Hashes the key and decides if the hash is in range to be handled by this node """
         key_hash = node_hash(key)
+        return self.responsible_for_hash(key_hash)
+
+    def responsible_for_hash(self, key_hash):
+        """ Decides if the hash is in range to be handled by this node """
         if (self.successor == None):
             # Single node
             return True
@@ -123,6 +131,7 @@ class NodeCore:
         else:
             # Wrap-around
             return self.desc.rank <= key_hash or key_hash < self.successor.rank
+
 
 
     # Handle a request to store a key-value pair
@@ -151,6 +160,27 @@ class NodeCore:
             else: return ValueNotFound()
         else:
             return ForwardRequest(self.successor)
+
+
+    def join_request(self, new_node):
+        """ Handle a request from a new node to join the network """
+        if self.responsible_for_hash(new_node.rank):
+
+            if self.successor != None:
+                successor_for_new_node = self.successor
+            else:
+                successor_for_new_node = self.desc
+
+            self.successor = new_node
+            return JoinAccepted(successor=successor_for_new_node)
+
+        else:
+            return ForwardRequest(self.successor)
+
+
+    def join_accepted(self, join_result):
+        """ Join a network when a join is accepted """
+        self.successor = join_result.successor
 
 
 
