@@ -132,6 +132,7 @@ class NodeCore:
 
         elif isinstance(ar, NewPredecessor):
             self.predecessor = ar.predecessor
+            return GenericOk()
 
         else:
             raise RuntimeError("Unknown message: %s" % (ar,))
