@@ -153,7 +153,7 @@ def send_request(hr):
     if response.status!=200:
         raise
 
-    verbosep("Request OK: %s %s" % (hr.method, hr.path))
+    verbosep("Got OK response: %s %s" % (hr.method, hr.path))
 
 
 # Actually Run as a Server
@@ -188,6 +188,7 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             send_message(newmsg)
 
     def respond_ok(self):
+        verbosep("Responding OK")
         self.send_response(200)
         self.end_headers()
         self.wfile.write("")
