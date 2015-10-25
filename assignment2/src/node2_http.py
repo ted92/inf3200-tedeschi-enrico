@@ -52,6 +52,22 @@ def parse_single_node_descriptor(s):
     """ Parse a string as a single node descriptor host:port """
     return ncore.NodeDescriptor(host_port = s.strip())
 
+def parse_node_descriptor_dict(s):
+    """ Parse a string as a list of roles and descriptors
+
+    For example:
+
+        successor=localhost:8002
+        predecessor=localhost:8001
+    """
+    rdmap = dict()
+    lines = s.split("\n")
+    for line in lines:
+        if line.strip() == "": continue
+        (role, hp) = line.split("=")
+        rdmap[role.strip()] = ncore.NodeDescriptor(host_port=hp.strip())
+    return rdmap
+
 
 def build_request(msg):
     """ Build an HttpRequest for a node message """
@@ -68,7 +84,17 @@ def build_request(msg):
                 destination = msg.destination,
                 method = "POST",
                 path = "join/accepted",
-                body = msg.successor.host_port)
+                body =
+"""successor = %s
+predecessor = %s
+""" % (msg.successor, msg.predecessor) )
+
+    if isinstance(msg, ncore.NewPredecessor):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "PUT",
+                path = "predecessor",
+                body = msg.predecessor.host_port)
 
     else:
         raise RuntimeError("Do not know how to build HTTP for message %s" % (msg,))
@@ -82,8 +108,15 @@ def parse_request(hr):
         return ncore.Join(destination=hr.destination, new_node=new_node)
 
     if hr.path=="join/accepted" and hr.method=="POST":
-        successor = parse_single_node_descriptor(hr.body)
-        return ncore.JoinAccepted(destination=hr.destination, successor=successor)
+        rolemap = parse_node_descriptor_dict(hr.body)
+        return ncore.JoinAccepted(
+                destination=hr.destination,
+                successor=rolemap["successor"],
+                predecessor=rolemap["predecessor"] )
+
+    if hr.path=="predecessor" and hr.method=="PUT":
+        p = parse_single_node_descriptor(hr.body)
+        return ncore.NewPredecessor(destination=hr.destination, predecessor=p)
 
     else:
         raise RuntimeError("Do not know how to parse request %s %s" % (hr.method, hr.path))

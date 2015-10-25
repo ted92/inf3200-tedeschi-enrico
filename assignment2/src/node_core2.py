@@ -42,8 +42,14 @@ class NodeDescriptor:
 
 # Node Messages
 
-Join = collections.namedtuple("Join", ["destination", "new_node"])
-JoinAccepted = collections.namedtuple("JoinAccepted", ['destination', 'successor'])
+Join = collections.namedtuple("Join",
+        ["destination", "new_node"])
+
+JoinAccepted = collections.namedtuple("JoinAccepted",
+        ['destination', 'successor', 'predecessor'])
+
+NewPredecessor = collections.namedtuple("NewPredecessor",
+        ["destination", "predecessor"])
 
 
 # Direct Node Responses
@@ -57,6 +63,8 @@ class NodeCore:
     def __init__(self, descriptor):
         self.descriptor = descriptor        # This node's descriptor
         self.successor = None               # Successor node's descriptor
+        self.predecessor = None             # Predecessor node's descriptor
+            # Remembering predecessor is necessary for graceful shutdown.
 
 
     def responsible_for_key(self, key):
@@ -92,21 +100,38 @@ class NodeCore:
         if isinstance(ar, Join):
 
             d = self.descriptor
-            s = self.successor
             n = ar.new_node
+            s = self.successor
 
             if self.responsible_for_hash(n.rank):
 
                 ns = s if s else d
                 self.successor = n
-                return [ JoinAccepted(destination=n, successor=ns) ]
+
+                newmsgs = []
+
+                if self.predecessor==None:
+                    self.predecessor = n
+                else:
+                    newmsgs.append(
+                            NewPredecessor( destination=s, predecessor=n ) )
+
+                newmsgs.append(
+                        JoinAccepted(
+                            destination=n, successor=ns, predecessor=d) )
+
+                return newmsgs
 
             else:
                 return [ Join(destination=s, new_node=n) ]
 
         elif isinstance(ar, JoinAccepted):
             self.successor = ar.successor
+            self.predecessor = ar.predecessor
             return GenericOk()
 
+        elif isinstance(ar, NewPredecessor):
+            self.predecessor = ar.predecessor
+
         else:
-            raise RuntimeError("Unknown message: %s" % ar)
+            raise RuntimeError("Unknown message: %s" % (ar,))

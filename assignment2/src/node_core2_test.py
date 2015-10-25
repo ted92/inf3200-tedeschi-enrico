@@ -105,6 +105,7 @@ class TestNodeCore(unittest.TestCase):
         d0 = node_ranked(0);    n0 = node.NodeCore(d0)
         self.assertEqual(n0.descriptor, d0)
         self.assertEqual(n0.successor, None)
+        self.assertEqual(n0.predecessor, None)
 
     def test_single_always_responsible_for_key(self):
         d0 = node_ranked(0);    n0 = node.NodeCore(d0)
@@ -127,16 +128,19 @@ class TestNodeCore(unittest.TestCase):
 
         self.assertDeepEqual(
                 result,
-                [ node.JoinAccepted(destination=d1, successor=d0) ])
+                [ node.JoinAccepted(
+                    destination=d1, successor=d0, predecessor=d0 ) ])
 
         accept_msg = result[0]
 
-        # Original node should accept new node as its successor
+        # Original node should accept new node as its successor and predecessor
         self.assertEqual(n0.successor, d1)
+        self.assertEqual(n0.predecessor, d1)
 
-        # New node should take existing node as its successor
+        # New node should take existing node as its successor and predecessor
         n1.handle_message(accept_msg)
         self.assertEqual(n1.successor, d0)
+        self.assertEqual(n1.predecessor, d0)
 
     def test_not_responsible_for_key(self):
         d0 = node_ranked(0);    n0 = node.NodeCore(d0)
@@ -146,7 +150,8 @@ class TestNodeCore(unittest.TestCase):
         result = n0.handle_message(node.Join(d0,d1))
         self.assertDeepEqual(
                 result,
-                [ node.JoinAccepted(destination=d1, successor=d0) ])
+                [ node.JoinAccepted(
+                    destination=d1, successor=d0, predecessor=d0 ) ])
 
         accept_msg = result[0]
         n1.handle_message(accept_msg)
@@ -169,16 +174,25 @@ class TestNodeCore(unittest.TestCase):
         result = n1.handle_message(node.Join(d1, d2))
         self.assertDeepEqual(
                 result,
-                [ node.JoinAccepted(destination=d2, successor=d0) ])
+                [
+                    node.NewPredecessor( destination=d0, predecessor=d2 ),
+                    node.JoinAccepted(
+                        destination=d2, successor=d0, predecessor=d1 ) ])
 
-        accept_msg = result[0]
+        newpred_msg = result[0]
+        accept_msg = result[1]
 
         # Node 1 should accept node 2 as its new successor
         self.assertEqual(n1.successor, d2)
 
-        # New node (2) should take the given node as its successor
+        # Successor should take the new node as its new predecessor
+        n0.handle_message(newpred_msg)
+        self.assertEqual(n0.predecessor, d2)
+
+        # New node (2) should take the given nodes as successor and predecessor
         n2.handle_message(accept_msg)
         self.assertEqual(n2.successor, d0)
+        self.assertEqual(n2.predecessor, d1)
 
     def test_join_double_indirect(self):
         d0 = node_ranked(0);    n0 = node.NodeCore(d0)
@@ -205,15 +219,25 @@ class TestNodeCore(unittest.TestCase):
         # Node 1 should accept the request
         self.assertDeepEqual(
                 result,
-                [ node.JoinAccepted(destination=d2, successor=d0) ])
-        accept_msg = result[0]
+                [
+                    node.NewPredecessor( destination=d0, predecessor=d2 ),
+                    node.JoinAccepted(
+                        destination=d2, successor=d0, predecessor=d1 ) ])
+
+        newpred_msg = result[0]
+        accept_msg = result[1]
 
         # Node 1 should accept node 2 as its new successor
         self.assertEqual(n1.successor, d2)
 
-        # New node (2) should take the given node as its successor
+        # Successor should take the new node as its new predecessor
+        n0.handle_message(newpred_msg)
+        self.assertEqual(n0.predecessor, d2)
+
+        # New node (2) should take the given nodes as successor and predecessor
         n2.handle_message(accept_msg)
         self.assertEqual(n2.successor, d0)
+        self.assertEqual(n2.predecessor, d1)
 
 
 if __name__ == '__main__':
