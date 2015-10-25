@@ -137,7 +137,8 @@ def send_request(hr):
 
     conn = httplib.HTTPConnection(hr.host, hr.port)
     conn.request(hr.method, hr.path, hr.body)
-    verbosep("Sent request: %s %s '%s'" % (hr.method, hr.path, hr.body))
+    verbosep("Sent request: %s:%d %s %s '%s'" %
+            (hr.host, hr.port, hr.method, hr.path, hr.body))
 
     # Must read response even if we don't do anything with it.
     # If we don't, the server will get broken pipe errors.
