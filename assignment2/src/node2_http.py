@@ -171,6 +171,9 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_POST(self):
         self.handle_request("POST")
 
+    def do_PUT(self):
+        self.handle_request("PUT")
+
     def handle_request(self, method):
         verbosep("Receiving request: %s %s" % (method, self.path))
         content_length = int(self.headers['Content-Length'])
