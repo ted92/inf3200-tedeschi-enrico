@@ -4,6 +4,7 @@ import BaseHTTPServer
 import argparse
 import collections
 import httplib
+import Queue
 import signal
 import threading
 
@@ -185,7 +186,7 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.respond_ok()
         for newmsg in action:
-            send_message(newmsg)
+            message_queue.put(newmsg)
 
     def respond_ok(self):
         verbosep("Responding OK")
@@ -223,6 +224,41 @@ class NodeServer(BaseHTTPServer.HTTPServer):
             self.handle_request()
 
 
+# An outgoing message queue
+
+message_queue = None
+
+class MessageQueue:
+
+    def __init__(self):
+        self.outbox = Queue.Queue()
+        self.thread = None
+
+    def start(self):
+
+        verbosep("Starting message queue")
+        def sender():
+            while True:
+                msg = self.outbox.get()
+                send_message(msg)
+                self.outbox.task_done()
+
+        self.thread = threading.Thread(
+                name="msg queue sender",
+                target=sender)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def put(self, msg):
+        self.outbox.put(msg)
+
+    def stop(self):
+        """ Waits until current messages are sent, then quits """
+        verbosep("Stopping message queue after empty...")
+        self.outbox.join()
+        verbosep("Message queue empty, shutting down.")
+
+
 
 if __name__ == '__main__':
 
@@ -247,9 +283,14 @@ if __name__ == '__main__':
     server_thread.daemon = True
     server_thread.start()
 
+    # Start the message queue to handle outgoing requests
+    message_queue = MessageQueue()
+    message_queue.start()
+
     def handler(signum, frame):
-        verbosep("Stopping http server...")
+        verbosep("Caught signal %d, stopping http server..." % signum)
         httpd.stop()
+        message_queue.stop()
     signal.signal(signal.SIGINT, handler)
 
     # Join network
