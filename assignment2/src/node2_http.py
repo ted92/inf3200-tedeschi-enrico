@@ -151,7 +151,7 @@ def send_request(hr):
     data = response.read()
 
     if response.status!=200:
-        raise
+        raise RuntimeException("Got bad response: %s" % response.status)
 
     verbosep("Got OK response: %s %s" % (hr.method, hr.path))
 
