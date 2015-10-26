@@ -99,17 +99,17 @@ class NodeCore:
             return d.rank <= key_hash or key_hash < s.rank
 
 
-    def handle_message(self, ar):
+    def handle_message(self, msg):
         """ Handle a message
 
         Returns either a direct response object,
         or a list of new messages to send.
         """
 
-        if isinstance(ar, Join):
+        if isinstance(msg, Join):
 
             d = self.descriptor
-            n = ar.new_node
+            n = msg.new_node
             s = self.successor
 
             if self.responsible_for_hash(n.rank):
@@ -134,20 +134,20 @@ class NodeCore:
             else:
                 return GenericOk([ Join(destination=s, new_node=n) ])
 
-        elif isinstance(ar, JoinAccepted):
-            self.successor = ar.successor
-            self.predecessor = ar.predecessor
+        elif isinstance(msg, JoinAccepted):
+            self.successor = msg.successor
+            self.predecessor = msg.predecessor
             return GenericOk([])
 
-        elif isinstance(ar, NewPredecessor):
-            self.predecessor = ar.predecessor
+        elif isinstance(msg, NewPredecessor):
+            self.predecessor = msg.predecessor
             return GenericOk([])
 
-        elif isinstance(ar, GetNeighbors):
+        elif isinstance(msg, GetNeighbors):
             neighbors = []
             if self.predecessor: neighbors.append(self.predecessor)
             if self.successor: neighbors.append(self.successor)
             return NeighborsList(new_messages=[], neighbors=neighbors)
 
         else:
-            raise RuntimeError("Unknown message: %s" % (ar,))
+            raise RuntimeError("Unknown message: %s" % (msg,))
