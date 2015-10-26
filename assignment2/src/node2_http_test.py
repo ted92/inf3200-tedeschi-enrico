@@ -116,5 +116,9 @@ class TestParseBuild(unittest.TestCase):
         self.assertEqual(resp.status, 200)
         self.assertEqual(resp.body, "localhost:8000\nlocalhost:8001\nlocalhost:8002")
 
+    def test_http_request_no_slash(self):
+        hr = nhttp.HttpRequest(method="GET", path="needs-a-slash")
+        self.assertEqual(hr.path, "/needs-a-slash")
+
 if __name__ == '__main__':
     unittest.main()

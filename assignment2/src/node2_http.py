@@ -43,7 +43,11 @@ class HttpRequest:
             self.port = destination.port
 
         self.method = method
+
+        if not path.startswith("/"):
+            path = "/" + path
         self.path = path
+
         self.body = body
 
 
