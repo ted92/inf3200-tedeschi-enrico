@@ -86,7 +86,7 @@ class TestParseBuild(unittest.TestCase):
         req = nhttp.build_request(msg)
 
         self.assertEqual(req.method, "GET")
-        self.assertEqual(req.path, "getNodes")
+        self.assertEqual(req.path, "/getNodes")
         self.assertEqual(req.body, "")
 
     def test_parse_get_neighbors(self):

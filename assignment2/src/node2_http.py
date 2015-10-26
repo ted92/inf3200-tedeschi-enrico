@@ -108,7 +108,7 @@ predecessor = %s
         return HttpRequest(
                 destination = msg.destination,
                 method = "GET",
-                path = "getNodes")
+                path = "/getNodes")
 
     else:
         raise RuntimeError("Do not know how to build HTTP for message %s" % (msg,))
@@ -132,7 +132,7 @@ def parse_request(hr):
         p = parse_single_node_descriptor(hr.body)
         return ncore.NewPredecessor(destination=hr.destination, predecessor=p)
 
-    if hr.path=="getNodes" and hr.method=="GET":
+    if hr.path=="/getNodes" and hr.method=="GET":
         return ncore.GetNeighbors(destination=hr.destination)
 
     else:
@@ -206,8 +206,9 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def handle_request(self, method):
         verbosep("Receiving request: %s %s" % (method, self.path))
-        content_length = int(self.headers['Content-Length'])
+        content_length = int(self.headers.getheader('content-length', 0))
         body = self.rfile.read(content_length)
+
         msg = parse_request(HttpRequest(
                 destination = server_node_core.descriptor,
                 method = method,
