@@ -143,9 +143,15 @@ def parse_request(hr):
 def build_response(dr):
     """ Build an HTTP response from an abstract node_core direct response object """
 
+    if isinstance(dr, ncore.GenericOk):
+        return HttpResponse(200)
+
     if isinstance(dr, ncore.NeighborsList):
         body = "\n".join( [n.host_port for n in dr.neighbors] )
         return HttpResponse(200, body)
+
+    else:
+        raise RuntimeError("Do not know how to build response for %s" % (dr,) )
 
 
 # Actually Send Requests
@@ -207,19 +213,20 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 method = method,
                 path = self.path,
                 body = body))
-
         verbosep("Parsed message: %s" % (msg,))
+
         action = server_node_core.handle_message(msg)
 
-        self.respond_ok()
-        for newmsg in action:
+        self.send_response_for_action(action)
+        for newmsg in action.new_messages:
             message_queue.put(newmsg)
 
-    def respond_ok(self):
-        verbosep("Responding OK")
-        self.send_response(200)
+    def send_response_for_action(self, action):
+        hr = build_response(action)
+        verbosep("Responding with %s" % (action,))
+        self.send_response(hr.status)
         self.end_headers()
-        self.wfile.write("")
+        self.wfile.write(hr.body)
 
 
 

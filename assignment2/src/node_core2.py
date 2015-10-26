@@ -41,6 +41,7 @@ class NodeDescriptor:
 
 
 # Node Messages
+# All messages should have a 'destination' field
 
 Join = collections.namedtuple("Join",
         ["destination", "new_node"])
@@ -56,10 +57,13 @@ GetNeighbors = collections.namedtuple("GetNeighbors",
 
 
 # Direct Node Responses
+# All direct responses should have a 'new_messages' field
 
-GenericOk = collections.namedtuple("GenericOk", [])
+GenericOk = collections.namedtuple("GenericOk",
+        ["new_messages"])
 
-NeighborsList = collections.namedtuple("NeighborsList", ["neighbors"])
+NeighborsList = collections.namedtuple("NeighborsList",
+        ["new_messages", "neighbors"])
 
 
 # Core Logic of Node
@@ -125,25 +129,25 @@ class NodeCore:
                         JoinAccepted(
                             destination=n, successor=ns, predecessor=d) )
 
-                return newmsgs
+                return GenericOk(newmsgs)
 
             else:
-                return [ Join(destination=s, new_node=n) ]
+                return GenericOk([ Join(destination=s, new_node=n) ])
 
         elif isinstance(ar, JoinAccepted):
             self.successor = ar.successor
             self.predecessor = ar.predecessor
-            return GenericOk()
+            return GenericOk([])
 
         elif isinstance(ar, NewPredecessor):
             self.predecessor = ar.predecessor
-            return GenericOk()
+            return GenericOk([])
 
         elif isinstance(ar, GetNeighbors):
             neighbors = []
             if self.predecessor: neighbors.append(self.predecessor)
             if self.successor: neighbors.append(self.successor)
-            return NeighborsList(neighbors=neighbors)
+            return NeighborsList(new_messages=[], neighbors=neighbors)
 
         else:
             raise RuntimeError("Unknown message: %s" % (ar,))

@@ -128,10 +128,12 @@ class TestNodeCore(unittest.TestCase):
 
         self.assertDeepEqual(
                 result,
-                [ node.JoinAccepted(
-                    destination=d1, successor=d0, predecessor=d0 ) ])
+                node.GenericOk([
+                    node.JoinAccepted(
+                        destination=d1, successor=d0, predecessor=d0 )
+                    ]))
 
-        accept_msg = result[0]
+        accept_msg = result.new_messages[0]
 
         # Original node should accept new node as its successor and predecessor
         self.assertEqual(n0.successor, d1)
@@ -150,10 +152,12 @@ class TestNodeCore(unittest.TestCase):
         result = n0.handle_message(node.Join(d0,d1))
         self.assertDeepEqual(
                 result,
-                [ node.JoinAccepted(
-                    destination=d1, successor=d0, predecessor=d0 ) ])
+                node.GenericOk([
+                    node.JoinAccepted(
+                        destination=d1, successor=d0, predecessor=d0 )
+                    ]))
 
-        accept_msg = result[0]
+        accept_msg = result.new_messages[0]
         n1.handle_message(accept_msg)
 
         k1 = key_ranked(1)
@@ -167,20 +171,21 @@ class TestNodeCore(unittest.TestCase):
 
         # Join nodes 0 and 1
         result = n0.handle_message(node.Join(d0, d1))
-        accept_msg = result[0]
+        accept_msg = result.new_messages[0]
         n1.handle_message(accept_msg)
 
         # Add node 2 at 1
         result = n1.handle_message(node.Join(d1, d2))
         self.assertDeepEqual(
                 result,
-                [
+                node.GenericOk([
                     node.NewPredecessor( destination=d0, predecessor=d2 ),
                     node.JoinAccepted(
-                        destination=d2, successor=d0, predecessor=d1 ) ])
+                        destination=d2, successor=d0, predecessor=d1 )
+                    ]))
 
-        newpred_msg = result[0]
-        accept_msg = result[1]
+        newpred_msg = result.new_messages[0]
+        accept_msg = result.new_messages[1]
 
         # Node 1 should accept node 2 as its new successor
         self.assertEqual(n1.successor, d2)
@@ -201,7 +206,7 @@ class TestNodeCore(unittest.TestCase):
 
         # Join nodes 0 and 1
         result = n0.handle_message(node.Join(d0, d1))
-        accept_msg = result[0]
+        accept_msg = result.new_messages[0]
         n1.handle_message(accept_msg)
 
         # Add node 2 at 0
@@ -210,8 +215,10 @@ class TestNodeCore(unittest.TestCase):
         # Node 0 should forward the request
         self.assertDeepEqual(
                 result,
-                [ node.Join(destination=d1, new_node=d2) ])
-        fwd_join = result[0]
+                node.GenericOk([
+                    node.Join(destination=d1, new_node=d2)
+                    ]))
+        fwd_join = result.new_messages[0]
 
         # Deliver forward request
         result = n1.handle_message(fwd_join)
@@ -219,13 +226,14 @@ class TestNodeCore(unittest.TestCase):
         # Node 1 should accept the request
         self.assertDeepEqual(
                 result,
-                [
+                node.GenericOk([
                     node.NewPredecessor( destination=d0, predecessor=d2 ),
                     node.JoinAccepted(
-                        destination=d2, successor=d0, predecessor=d1 ) ])
+                        destination=d2, successor=d0, predecessor=d1 )
+                    ]))
 
-        newpred_msg = result[0]
-        accept_msg = result[1]
+        newpred_msg = result.new_messages[0]
+        accept_msg = result.new_messages[1]
 
         # Node 1 should accept node 2 as its new successor
         self.assertEqual(n1.successor, d2)
@@ -250,7 +258,7 @@ class TestNodeCore(unittest.TestCase):
         result = n1.handle_message(msg)
 
         self.assertDeepEqual(result,
-                node.NeighborsList(neighbors=[d0,d2]))
+                node.NeighborsList(new_messages=[], neighbors=[d0,d2]))
 
 class NodeReactor:
     """ Simulated network of nodes that automatically propagates messages
@@ -283,7 +291,7 @@ class NodeReactor:
         # print("delivering", msg)
         target = self.nodes[msg.destination.host_port]
         result = target.handle_message(msg)
-        for newmsg in result:
+        for newmsg in result.new_messages:
             self.send_msg(newmsg)
         return result
 

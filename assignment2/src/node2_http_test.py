@@ -97,11 +97,19 @@ class TestParseBuild(unittest.TestCase):
         parsed = nhttp.parse_request(req)
         self.assertEqual(parsed, msg)
 
+    def test_build_generic_ok(self):
+        dr = ncore.GenericOk(new_messages=[])
+
+        resp = nhttp.build_response(dr)
+
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(resp.body, "")
+
     def test_build_neighbors_list(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
         d2 = ncore.NodeDescriptor(host_port="localhost:8002")
-        dr = ncore.NeighborsList(neighbors=[d0,d1,d2])
+        dr = ncore.NeighborsList(new_messages=[], neighbors=[d0,d1,d2])
 
         resp = nhttp.build_response(dr)
 
