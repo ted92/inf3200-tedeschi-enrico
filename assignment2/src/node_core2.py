@@ -51,10 +51,15 @@ JoinAccepted = collections.namedtuple("JoinAccepted",
 NewPredecessor = collections.namedtuple("NewPredecessor",
         ["destination", "predecessor"])
 
+GetNeighbors = collections.namedtuple("GetNeighbors",
+        ["destination"])
+
 
 # Direct Node Responses
 
 GenericOk = collections.namedtuple("GenericOk", [])
+
+NeighborsList = collections.namedtuple("NeighborsList", ["neighbors"])
 
 
 # Core Logic of Node
@@ -133,6 +138,12 @@ class NodeCore:
         elif isinstance(ar, NewPredecessor):
             self.predecessor = ar.predecessor
             return GenericOk()
+
+        elif isinstance(ar, GetNeighbors):
+            neighbors = []
+            if self.predecessor: neighbors.append(self.predecessor)
+            if self.successor: neighbors.append(self.successor)
+            return NeighborsList(neighbors=neighbors)
 
         else:
             raise RuntimeError("Unknown message: %s" % (ar,))

@@ -239,6 +239,53 @@ class TestNodeCore(unittest.TestCase):
         self.assertEqual(n2.successor, d0)
         self.assertEqual(n2.predecessor, d1)
 
+    def test_get_neighbors(self):
+        d0 = node_ranked(0);    n0 = node.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = node.NodeCore(d1)
+        d2 = node_ranked(2);    n2 = node.NodeCore(d2)
+
+        reactor = NodeReactor(n0, n1, n2)
+
+        msg = node.GetNeighbors(destination = d1)
+        result = n1.handle_message(msg)
+
+        self.assertDeepEqual(result,
+                node.NeighborsList(neighbors=[d0,d2]))
+
+class NodeReactor:
+    """ Simulated network of nodes that automatically propagates messages
+
+    For easier test setup
+    """
+
+    def __init__(self, *nodes):
+        self.nodes = dict()
+        for node in nodes:
+            self.join_node(node)
+
+    def join_node(self, new_node):
+        """ Add a node to the reactor, and have it join the simulated network """
+        if len(self.nodes) > 0:
+            existing = self.nodes.itervalues().next()
+        else:
+            existing = None
+
+        self.nodes[new_node.descriptor.host_port] = new_node
+
+        if existing:
+            self.send_msg(
+                    node.Join(
+                        destination=existing.descriptor,
+                        new_node=new_node.descriptor))
+
+    def send_msg(self, msg):
+        """ Send a message, and propagate any new messages from the result """
+        # print("delivering", msg)
+        target = self.nodes[msg.destination.host_port]
+        result = target.handle_message(msg)
+        for newmsg in result:
+            self.send_msg(newmsg)
+        return result
 
 if __name__ == '__main__':
     unittest.main()

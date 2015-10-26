@@ -79,6 +79,34 @@ class TestParseBuild(unittest.TestCase):
         parsed = nhttp.parse_request(req)
         self.assertEqual(parsed, msg)
 
+    def test_build_get_neighbors(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        msg = ncore.GetNeighbors(destination=d0)
+
+        req = nhttp.build_request(msg)
+
+        self.assertEqual(req.method, "GET")
+        self.assertEqual(req.path, "getNodes")
+        self.assertEqual(req.body, "")
+
+    def test_parse_get_neighbors(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        msg = ncore.GetNeighbors(destination=d0)
+
+        req = nhttp.build_request(msg)
+        parsed = nhttp.parse_request(req)
+        self.assertEqual(parsed, msg)
+
+    def test_build_neighbors_list(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        d2 = ncore.NodeDescriptor(host_port="localhost:8002")
+        dr = ncore.NeighborsList(neighbors=[d0,d1,d2])
+
+        resp = nhttp.build_response(dr)
+
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(resp.body, "localhost:8000\nlocalhost:8001\nlocalhost:8002")
 
 if __name__ == '__main__':
     unittest.main()

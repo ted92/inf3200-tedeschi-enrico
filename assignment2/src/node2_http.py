@@ -47,6 +47,13 @@ class HttpRequest:
         self.body = body
 
 
+class HttpResponse:
+    """ Abstraction of an HTTP response to a node request """
+    def __init__(self, status=200, body=""):
+        self.status = status
+        self.body = body
+
+
 # Convert HTTP to and from Node Messages
 
 def parse_single_node_descriptor(s):
@@ -97,6 +104,12 @@ predecessor = %s
                 path = "predecessor",
                 body = msg.predecessor.host_port)
 
+    if isinstance(msg, ncore.GetNeighbors):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "GET",
+                path = "getNodes")
+
     else:
         raise RuntimeError("Do not know how to build HTTP for message %s" % (msg,))
 
@@ -119,9 +132,20 @@ def parse_request(hr):
         p = parse_single_node_descriptor(hr.body)
         return ncore.NewPredecessor(destination=hr.destination, predecessor=p)
 
+    if hr.path=="getNodes" and hr.method=="GET":
+        return ncore.GetNeighbors(destination=hr.destination)
+
     else:
         raise RuntimeError("Do not know how to parse request %s %s" % (hr.method, hr.path))
 
+
+
+def build_response(dr):
+    """ Build an HTTP response from an abstract node_core direct response object """
+
+    if isinstance(dr, ncore.NeighborsList):
+        body = "\n".join( [n.host_port for n in dr.neighbors] )
+        return HttpResponse(200, body)
 
 
 # Actually Send Requests
