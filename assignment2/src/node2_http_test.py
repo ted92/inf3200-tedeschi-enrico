@@ -98,7 +98,7 @@ class TestParseBuild(unittest.TestCase):
         self.assertEqual(parsed, msg)
 
     def test_build_generic_ok(self):
-        dr = ncore.GenericOk(new_messages=[])
+        dr = ncore.GenericOk()
 
         resp = nhttp.build_response(dr)
 
@@ -109,7 +109,7 @@ class TestParseBuild(unittest.TestCase):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
         d2 = ncore.NodeDescriptor(host_port="localhost:8002")
-        dr = ncore.NeighborsList(new_messages=[], neighbors=[d0,d1,d2])
+        dr = ncore.NeighborsList(neighbors=[d0,d1,d2])
 
         resp = nhttp.build_response(dr)
 

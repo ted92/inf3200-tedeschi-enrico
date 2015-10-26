@@ -61,9 +61,11 @@ GetNeighbors = collections.namedtuple("GetNeighbors",
 
 GenericOk = collections.namedtuple("GenericOk",
         ["new_messages"])
+GenericOk.__new__.__defaults__ = ([],)
 
 NeighborsList = collections.namedtuple("NeighborsList",
         ["new_messages", "neighbors"])
+NeighborsList.__new__.__defaults__ = ([],[])
 
 
 # Core Logic of Node
@@ -137,17 +139,17 @@ class NodeCore:
         elif isinstance(msg, JoinAccepted):
             self.successor = msg.successor
             self.predecessor = msg.predecessor
-            return GenericOk([])
+            return GenericOk()
 
         elif isinstance(msg, NewPredecessor):
             self.predecessor = msg.predecessor
-            return GenericOk([])
+            return GenericOk()
 
         elif isinstance(msg, GetNeighbors):
             neighbors = []
             if self.predecessor: neighbors.append(self.predecessor)
             if self.successor: neighbors.append(self.successor)
-            return NeighborsList(new_messages=[], neighbors=neighbors)
+            return NeighborsList(neighbors=neighbors)
 
         else:
             raise RuntimeError("Unknown message: %s" % (msg,))

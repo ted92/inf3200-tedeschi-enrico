@@ -258,7 +258,7 @@ class TestNodeCore(unittest.TestCase):
         result = n1.handle_message(msg)
 
         self.assertDeepEqual(result,
-                ncore.NeighborsList(new_messages=[], neighbors=[d0,d2]))
+                ncore.NeighborsList(neighbors=[d0,d2]))
 
 class NodeReactor:
     """ Simulated network of nodes that automatically propagates messages
