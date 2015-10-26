@@ -132,7 +132,7 @@ class NodeCore:
                 return GenericOk(newmsgs)
 
             else:
-                return GenericOk([ Join(destination=s, new_node=n) ])
+                return GenericOk([ msg._replace(destination=s) ])
 
         elif isinstance(msg, JoinAccepted):
             self.successor = msg.successor
