@@ -23,7 +23,7 @@ class TestParseBuild(unittest.TestCase):
         req = nhttp.build_request(msg)
 
         self.assertEqual(req.method, "POST")
-        self.assertEqual(req.path, "join")
+        self.assertEqual(req.path, "/join")
         self.assertEqual(req.body, "localhost:8001")
 
     def test_parse_join(self):
@@ -45,7 +45,7 @@ class TestParseBuild(unittest.TestCase):
         req = nhttp.build_request(msg)
 
         self.assertEqual(req.method, "POST")
-        self.assertEqual(req.path, "join/accepted")
+        self.assertEqual(req.path, "/join/accepted")
         self.assertEqual(req.body,
                 "successor = localhost:8002\npredecessor = localhost:8000\n")
 
@@ -67,7 +67,7 @@ class TestParseBuild(unittest.TestCase):
         req = nhttp.build_request(msg)
 
         self.assertEqual(req.method, "PUT")
-        self.assertEqual(req.path, "predecessor")
+        self.assertEqual(req.path, "/predecessor")
         self.assertEqual(req.body, "localhost:8000")
 
     def test_parse_new_predecessor(self):

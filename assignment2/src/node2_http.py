@@ -84,14 +84,14 @@ def build_request(msg):
         return HttpRequest(
                 destination = msg.destination,
                 method = "POST",
-                path = "join",
+                path = "/join",
                 body = msg.new_node.host_port)
 
     if isinstance(msg, ncore.JoinAccepted):
         return HttpRequest(
                 destination = msg.destination,
                 method = "POST",
-                path = "join/accepted",
+                path = "/join/accepted",
                 body =
 """successor = %s
 predecessor = %s
@@ -101,7 +101,7 @@ predecessor = %s
         return HttpRequest(
                 destination = msg.destination,
                 method = "PUT",
-                path = "predecessor",
+                path = "/predecessor",
                 body = msg.predecessor.host_port)
 
     if isinstance(msg, ncore.GetNeighbors):
@@ -117,18 +117,18 @@ predecessor = %s
 def parse_request(hr):
     """ Parse an HttpRequest to one of the node message types """
 
-    if hr.path=="join" and hr.method=="POST":
+    if hr.path=="/join" and hr.method=="POST":
         new_node = parse_single_node_descriptor(hr.body)
         return ncore.Join(destination=hr.destination, new_node=new_node)
 
-    if hr.path=="join/accepted" and hr.method=="POST":
+    if hr.path=="/join/accepted" and hr.method=="POST":
         rolemap = parse_node_descriptor_dict(hr.body)
         return ncore.JoinAccepted(
                 destination=hr.destination,
                 successor=rolemap["successor"],
                 predecessor=rolemap["predecessor"] )
 
-    if hr.path=="predecessor" and hr.method=="PUT":
+    if hr.path=="/predecessor" and hr.method=="PUT":
         p = parse_single_node_descriptor(hr.body)
         return ncore.NewPredecessor(destination=hr.destination, predecessor=p)
 
