@@ -99,7 +99,8 @@ def build_request(msg):
                 body =
 """successor = %s
 predecessor = %s
-""" % (msg.successor, msg.predecessor) )
+leader = %s
+""" % (msg.successor, msg.predecessor, msg.leader) )
 
     if isinstance(msg, ncore.NewPredecessor):
         return HttpRequest(
@@ -130,7 +131,8 @@ def parse_request(hr):
         return ncore.JoinAccepted(
                 destination=hr.destination,
                 successor=rolemap["successor"],
-                predecessor=rolemap["predecessor"] )
+                predecessor=rolemap["predecessor"],
+                leader=rolemap["leader"])
 
     if hr.path=="/predecessor" and hr.method=="PUT":
         p = parse_single_node_descriptor(hr.body)

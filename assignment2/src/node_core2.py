@@ -46,11 +46,15 @@ class NodeDescriptor:
 Join = collections.namedtuple("Join",
         ["destination", "new_node"])
 
+
 JoinAccepted = collections.namedtuple("JoinAccepted",
-        ['destination', 'successor', 'predecessor'])
+        ['destination', 'successor', 'predecessor', 'leader'])
+JoinAccepted.__new__.__defaults__ = (None, None, None, None)
+
 
 NewPredecessor = collections.namedtuple("NewPredecessor",
         ["destination", "predecessor"])
+
 
 GetNeighbors = collections.namedtuple("GetNeighbors",
         ["destination"])
@@ -74,8 +78,12 @@ class NodeCore:
     def __init__(self, descriptor):
         self.descriptor = descriptor        # This node's descriptor
         self.successor = None               # Successor node's descriptor
+
+        # Remembering predecessor is necessary for graceful shutdown.
         self.predecessor = None             # Predecessor node's descriptor
-            # Remembering predecessor is necessary for graceful shutdown.
+
+        # If a node is in a network by itself, it is the leader.
+        self.leader = descriptor
 
 
     def responsible_for_key(self, key):
@@ -129,7 +137,9 @@ class NodeCore:
 
                 newmsgs.append(
                         JoinAccepted(
-                            destination=n, successor=ns, predecessor=d) )
+                            destination=n,
+                            successor=ns, predecessor=d,
+                            leader=self.leader) )
 
                 return GenericOk(newmsgs)
 
@@ -139,6 +149,7 @@ class NodeCore:
         elif isinstance(msg, JoinAccepted):
             self.successor = msg.successor
             self.predecessor = msg.predecessor
+            self.leader = msg.leader
             return GenericOk()
 
         elif isinstance(msg, NewPredecessor):

@@ -130,7 +130,7 @@ class TestNodeCore(unittest.TestCase):
                 result,
                 ncore.GenericOk([
                     ncore.JoinAccepted(
-                        destination=d1, successor=d0, predecessor=d0 )
+                        destination=d1, successor=d0, predecessor=d0, leader=d0 )
                     ]))
 
         accept_msg = result.new_messages[0]
@@ -154,7 +154,7 @@ class TestNodeCore(unittest.TestCase):
                 result,
                 ncore.GenericOk([
                     ncore.JoinAccepted(
-                        destination=d1, successor=d0, predecessor=d0 )
+                        destination=d1, successor=d0, predecessor=d0, leader=d0)
                     ]))
 
         accept_msg = result.new_messages[0]
@@ -181,7 +181,7 @@ class TestNodeCore(unittest.TestCase):
                 ncore.GenericOk([
                     ncore.NewPredecessor( destination=d0, predecessor=d2 ),
                     ncore.JoinAccepted(
-                        destination=d2, successor=d0, predecessor=d1 )
+                        destination=d2, successor=d0, predecessor=d1, leader=d0)
                     ]))
 
         newpred_msg = result.new_messages[0]
@@ -229,7 +229,7 @@ class TestNodeCore(unittest.TestCase):
                 ncore.GenericOk([
                     ncore.NewPredecessor( destination=d0, predecessor=d2 ),
                     ncore.JoinAccepted(
-                        destination=d2, successor=d0, predecessor=d1 )
+                        destination=d2, successor=d0, predecessor=d1, leader=d0 )
                     ]))
 
         newpred_msg = result.new_messages[0]
@@ -259,6 +259,24 @@ class TestNodeCore(unittest.TestCase):
 
         self.assertDeepEqual(result,
                 ncore.NeighborsList(neighbors=[d0,d2]))
+
+    def test_leader_new_node_own_leader(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        self.assertEqual(n0.leader, d0)
+
+    def test_leader_assigned_on_join(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+
+        reactor = NodeReactor(n0)
+        reactor.join_node(n1)
+
+        # Original leader should remain unchanged (Ring structure is about minimal disruption)
+        self.assertEqual(n0.leader, d0)
+
+        # New node should take original leader (again, minimal disruption)
+        self.assertEqual(n1.leader, d0)
+
 
 class NodeReactor:
     """ Simulated network of nodes that automatically propagates messages

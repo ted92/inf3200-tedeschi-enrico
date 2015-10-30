@@ -40,20 +40,22 @@ class TestParseBuild(unittest.TestCase):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
         d2 = ncore.NodeDescriptor(host_port="localhost:8002")
-        msg = ncore.JoinAccepted(destination=d1, successor=d2, predecessor=d0)
+        d3 = ncore.NodeDescriptor(host_port="localhost:8003")
+        msg = ncore.JoinAccepted(destination=d1, successor=d2, predecessor=d0, leader=d3)
 
         req = nhttp.build_request(msg)
 
         self.assertEqual(req.method, "POST")
         self.assertEqual(req.path, "/join/accepted")
         self.assertEqual(req.body,
-                "successor = localhost:8002\npredecessor = localhost:8000\n")
+                "successor = localhost:8002\npredecessor = localhost:8000\nleader = localhost:8003\n")
 
     def test_parse_join_accept(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
         d2 = ncore.NodeDescriptor(host_port="localhost:8002")
-        msg = ncore.JoinAccepted(destination=d1, successor=d2, predecessor=d0)
+        d3 = ncore.NodeDescriptor(host_port="localhost:8003")
+        msg = ncore.JoinAccepted(destination=d1, successor=d2, predecessor=d0, leader=d3)
 
         req = nhttp.build_request(msg)
         parsed = nhttp.parse_request(req)
