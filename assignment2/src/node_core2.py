@@ -59,17 +59,25 @@ NewPredecessor = collections.namedtuple("NewPredecessor",
 GetNeighbors = collections.namedtuple("GetNeighbors",
         ["destination"])
 
+GetLeader = collections.namedtuple("GetLeader",
+        ["destination"])
+
 
 # Direct Node Responses
 # All direct responses should have a 'new_messages' field
 
+# An OK message with no content
 GenericOk = collections.namedtuple("GenericOk",
         ["new_messages"])
 GenericOk.__new__.__defaults__ = ([],)
 
-NeighborsList = collections.namedtuple("NeighborsList",
-        ["new_messages", "neighbors"])
-NeighborsList.__new__.__defaults__ = ([],[])
+# A simple list of node descriptors.
+# Semantics depends on the call.
+#   GetNeighbors will return a list of neighbors.
+#   GetLeader will return a list with one element: the leader.
+NodeList = collections.namedtuple("NodeList",
+        ["new_messages", "nodes"])
+NodeList.__new__.__defaults__ = ([],[])
 
 
 # Core Logic of Node
@@ -160,7 +168,10 @@ class NodeCore:
             neighbors = []
             if self.predecessor: neighbors.append(self.predecessor)
             if self.successor: neighbors.append(self.successor)
-            return NeighborsList(neighbors=neighbors)
+            return NodeList(nodes=neighbors)
+
+        elif isinstance(msg, GetLeader):
+            return NodeList(nodes=[self.leader])
 
         else:
             raise RuntimeError("Unknown message: %s" % (msg,))

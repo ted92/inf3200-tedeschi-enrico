@@ -99,6 +99,24 @@ class TestParseBuild(unittest.TestCase):
         parsed = nhttp.parse_request(req)
         self.assertEqual(parsed, msg)
 
+    def test_build_get_neighbors(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        msg = ncore.GetLeader(destination=d0)
+
+        req = nhttp.build_request(msg)
+
+        self.assertEqual(req.method, "GET")
+        self.assertEqual(req.path, "/getCurrentLeader")
+        self.assertEqual(req.body, "")
+
+    def test_parse_get_neighbors(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        msg = ncore.GetLeader(destination=d0)
+
+        req = nhttp.build_request(msg)
+        parsed = nhttp.parse_request(req)
+        self.assertEqual(parsed, msg)
+
     def test_build_generic_ok(self):
         dr = ncore.GenericOk()
 
@@ -107,11 +125,11 @@ class TestParseBuild(unittest.TestCase):
         self.assertEqual(resp.status, 200)
         self.assertEqual(resp.body, "")
 
-    def test_build_neighbors_list(self):
+    def test_build_node_list(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
         d2 = ncore.NodeDescriptor(host_port="localhost:8002")
-        dr = ncore.NeighborsList(neighbors=[d0,d1,d2])
+        dr = ncore.NodeList(nodes=[d0,d1,d2])
 
         resp = nhttp.build_response(dr)
 

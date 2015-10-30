@@ -115,6 +115,11 @@ leader = %s
                 method = "GET",
                 path = "/getNodes")
 
+    if isinstance(msg, ncore.GetLeader):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "GET",
+                path = "/getCurrentLeader")
     else:
         raise RuntimeError("Do not know how to build HTTP for message %s" % (msg,))
 
@@ -141,6 +146,9 @@ def parse_request(hr):
     if hr.path=="/getNodes" and hr.method=="GET":
         return ncore.GetNeighbors(destination=hr.destination)
 
+    if hr.path=="/getCurrentLeader" and hr.method=="GET":
+        return ncore.GetLeader(destination=hr.destination)
+
     else:
         raise RuntimeError("Do not know how to parse request %s %s" % (hr.method, hr.path))
 
@@ -152,8 +160,8 @@ def build_response(dr):
     if isinstance(dr, ncore.GenericOk):
         return HttpResponse(200)
 
-    if isinstance(dr, ncore.NeighborsList):
-        body = "\n".join( [n.host_port for n in dr.neighbors] )
+    if isinstance(dr, ncore.NodeList):
+        body = "\n".join( [n.host_port for n in dr.nodes] )
         return HttpResponse(200, body)
 
     else:

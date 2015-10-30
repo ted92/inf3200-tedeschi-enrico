@@ -258,7 +258,7 @@ class TestNodeCore(unittest.TestCase):
         result = n1.handle_message(msg)
 
         self.assertDeepEqual(result,
-                ncore.NeighborsList(neighbors=[d0,d2]))
+                ncore.NodeList(nodes=[d0,d2]))
 
     def test_leader_new_node_own_leader(self):
         d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
@@ -276,6 +276,18 @@ class TestNodeCore(unittest.TestCase):
 
         # New node should take original leader (again, minimal disruption)
         self.assertEqual(n1.leader, d0)
+
+    def test_get_leader(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+
+        reactor = NodeReactor(n0, n1)
+
+        msg = ncore.GetLeader(destination = d0)
+        result = n1.handle_message(msg)
+
+        self.assertEqual(result,
+                ncore.NodeList(nodes=[d0]))
 
 
 class NodeReactor:
