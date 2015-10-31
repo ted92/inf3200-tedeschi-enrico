@@ -55,6 +55,12 @@ JoinAccepted.__new__.__defaults__ = (None, None, None, None)
 NewPredecessor = collections.namedtuple("NewPredecessor",
         ["destination", "predecessor"])
 
+Election = collections.namedtuple("Election",
+        ["destination", "participants"])
+Election.__new__.__defaults__ = (None, [])
+
+ElectionResult = collections.namedtuple("ElectionResult",
+        ["destination", "new_leader"])
 
 GetNeighbors = collections.namedtuple("GetNeighbors",
         ["destination"])
@@ -163,6 +169,36 @@ class NodeCore:
         elif isinstance(msg, NewPredecessor):
             self.predecessor = msg.predecessor
             return GenericOk()
+
+        elif isinstance(msg, Election):
+            if self.successor == None:
+                # Single node. You are already the leader. No one else to elect.
+                return GenericOk()
+            if self.descriptor in msg.participants:
+                # Message has re-reached you. You win.
+                announce = ElectionResult(
+                        destination = self.successor,
+                        new_leader = self.descriptor
+                        )
+                return GenericOk(new_messages=[announce])
+            else:
+                # You are the next participant, add your name and forward.
+                fwd = Election(
+                        destination = self.successor,
+                        participants = msg.participants + [self.descriptor]
+                        )
+                return GenericOk(new_messages=[fwd])
+
+        elif isinstance(msg, ElectionResult):
+            self.leader = msg.new_leader
+            if msg.new_leader == self.descriptor:
+                # Message has completed it's trip around the ring.
+                # You are confirmed as the winner.
+                return GenericOk()
+            else:
+                return GenericOk(new_messages = [
+                    msg._replace(destination = self.successor)
+                    ])
 
         elif isinstance(msg, GetNeighbors):
             neighbors = []

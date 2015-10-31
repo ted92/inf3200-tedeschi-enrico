@@ -289,6 +289,90 @@ class TestNodeCore(unittest.TestCase):
         self.assertEqual(result,
                 ncore.NodeList(nodes=[d0]))
 
+    def test_election_single_node(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+
+        msg = ncore.Election(destination = d0, participants=[])
+        result = n0.handle_message(msg)
+
+        self.assertEqual(result, ncore.GenericOk())
+        self.assertEqual(n0.leader, d0)
+
+    def test_election_fwd(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+        reactor = NodeReactor(n0, n1)
+
+        msg = ncore.Election(destination = d0, participants=[])
+        result = n0.handle_message(msg)
+
+        # It should add its name to the list and forward to the next node
+        self.assertDeepEqual(result,
+                ncore.GenericOk(new_messages=[
+                        ncore.Election(destination=d1, participants=[d0])
+                    ]))
+
+    def test_election_win(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+        reactor = NodeReactor(n0, n1)
+
+        msg = ncore.Election(destination = d0, participants=[d0,d1])
+        result = n0.handle_message(msg)
+
+        # It should declare itself the winner
+        self.assertDeepEqual(result,
+                ncore.GenericOk(new_messages=[
+                        ncore.ElectionResult(destination=d1, new_leader=d0)
+                    ]))
+
+    def test_election_result_fwd(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+        reactor = NodeReactor(n0, n1)
+
+        msg = ncore.ElectionResult(destination=d0, new_leader=d1)
+        result = n0.handle_message(msg)
+
+        # It should set its leader and forward the message
+        self.assertEqual(n0.leader, d1)
+        self.assertDeepEqual(result,
+                ncore.GenericOk(new_messages=[
+                        ncore.ElectionResult(destination=d1, new_leader=d1)
+                    ]))
+
+    def test_election_result_finish(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+        reactor = NodeReactor(n0, n1)
+
+        msg = ncore.ElectionResult(destination=d1, new_leader=d1)
+        result = n1.handle_message(msg)
+
+        # It should set its leader and forward the message
+        self.assertEqual(n1.leader, d1)
+        self.assertDeepEqual(result, ncore.GenericOk())
+
+    def test_election_together(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+        d2 = node_ranked(2);    n2 = ncore.NodeCore(d2)
+
+        reactor = NodeReactor(n0, n1, n2)
+
+        msg = ncore.Election(destination=d2)
+        reactor.send_msg(msg)
+        self.assertEqual(n0.leader, d2)
+        self.assertEqual(n1.leader, d2)
+        self.assertEqual(n2.leader, d2)
+
+        msg = ncore.Election(destination=d1)
+        reactor.send_msg(msg)
+        self.assertEqual(n0.leader, d1)
+        self.assertEqual(n1.leader, d1)
+        self.assertEqual(n2.leader, d1)
+
+
 
 class NodeReactor:
     """ Simulated network of nodes that automatically propagates messages
