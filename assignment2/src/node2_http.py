@@ -80,6 +80,13 @@ def parse_node_descriptor_dict(s):
         rdmap[role.strip()] = ncore.NodeDescriptor(host_port=hp.strip())
     return rdmap
 
+def build_node_descriptor_list(node_list):
+    """ Produce a simple list of host:port pairs, one on each line. """
+    return "\n".join( [n.host_port for n in node_list] )
+
+def parse_node_descriptor_list(s):
+    return [ncore.NodeDescriptor(host_port=hp) for hp in s.strip().split("\n")]
+
 
 def build_request(msg):
     """ Build an HttpRequest for a node message """
@@ -108,6 +115,20 @@ leader = %s
                 method = "PUT",
                 path = "/predecessor",
                 body = msg.predecessor.host_port)
+
+    if isinstance(msg, ncore.Election):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "POST",
+                path = "/election",
+                body = build_node_descriptor_list(msg.participants))
+
+    if isinstance(msg, ncore.ElectionResult):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "POST",
+                path = "/election/result",
+                body = msg.new_leader.host_port)
 
     if isinstance(msg, ncore.GetNeighbors):
         return HttpRequest(
@@ -143,6 +164,14 @@ def parse_request(hr):
         p = parse_single_node_descriptor(hr.body)
         return ncore.NewPredecessor(destination=hr.destination, predecessor=p)
 
+    if hr.path=="/election" and hr.method=="POST":
+        p = parse_node_descriptor_list(hr.body)
+        return ncore.Election(destination=hr.destination, participants=p)
+
+    if hr.path=="/election/result" and hr.method=="POST":
+        nl = parse_single_node_descriptor(hr.body)
+        return ncore.ElectionResult(destination=hr.destination, new_leader=nl)
+
     if hr.path=="/getNodes" and hr.method=="GET":
         return ncore.GetNeighbors(destination=hr.destination)
 
@@ -161,7 +190,7 @@ def build_response(dr):
         return HttpResponse(200)
 
     if isinstance(dr, ncore.NodeList):
-        body = "\n".join( [n.host_port for n in dr.nodes] )
+        body = build_node_descriptor_list(dr.nodes)
         return HttpResponse(200, body)
 
     else:

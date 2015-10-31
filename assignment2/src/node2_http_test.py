@@ -99,7 +99,7 @@ class TestParseBuild(unittest.TestCase):
         parsed = nhttp.parse_request(req)
         self.assertEqual(parsed, msg)
 
-    def test_build_get_neighbors(self):
+    def test_build_get_leader(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         msg = ncore.GetLeader(destination=d0)
 
@@ -109,9 +109,49 @@ class TestParseBuild(unittest.TestCase):
         self.assertEqual(req.path, "/getCurrentLeader")
         self.assertEqual(req.body, "")
 
-    def test_parse_get_neighbors(self):
+    def test_parse_get_leader(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         msg = ncore.GetLeader(destination=d0)
+
+        req = nhttp.build_request(msg)
+        parsed = nhttp.parse_request(req)
+        self.assertEqual(parsed, msg)
+
+    def test_build_election(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.Election(destination=d0, participants=[d0,d1])
+
+        req = nhttp.build_request(msg)
+
+        self.assertEqual(req.method, "POST")
+        self.assertEqual(req.path, "/election")
+        self.assertEqual(req.body, "localhost:8000\nlocalhost:8001")
+
+    def test_parse_election(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.Election(destination=d0, participants=[d0,d1])
+
+        req = nhttp.build_request(msg)
+        parsed = nhttp.parse_request(req)
+        self.assertEqual(parsed, msg)
+
+    def test_build_election_result(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.ElectionResult(destination=d0, new_leader=d1)
+
+        req = nhttp.build_request(msg)
+
+        self.assertEqual(req.method, "POST")
+        self.assertEqual(req.path, "/election/result")
+        self.assertEqual(req.body, "localhost:8001")
+
+    def test_parse_election_result(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.ElectionResult(destination=d0, new_leader=d1)
 
         req = nhttp.build_request(msg)
         parsed = nhttp.parse_request(req)
