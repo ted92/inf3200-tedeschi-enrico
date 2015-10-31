@@ -1,0 +1,35 @@
+\begin{thebibliography}{1}
+
+\bibitem{rocks}
+Rocks clusters: About.
+\newblock \url{http://www.rocksclusters.org/wordpress/?page_id=57}.
+
+\bibitem{p2plookup}
+Hari Balakrishnan, M.~Frans Kaashoek, David Karger, Robert Morris, and Ion
+  Stoica.
+\newblock Looking up data in {P2P} systems.
+\newblock {\em Commun. ACM}, 46(2):43--48, February 2003.
+\newblock \url{http://doi.acm.org/10.1145/606272.606299}.
+
+\bibitem{chord}
+Frank Dabek, Emma Brunskill, M.~Frans Kaashoek, David Karger, Robert Morris,
+  Ion Stoica, and Hari Balakrishnan.
+\newblock Building peer-to-peer systems with chord, a distributed lookup
+  service.
+\newblock \url{https://pdos.csail.mit.edu/papers/chord:hotos01/hotos8.pdf}.
+\newblock MIT Laboratory for Computer Science.
+
+\bibitem{md5rfc}
+Ronald Rivest.
+\newblock The {MD5} message-digest algorithm.
+\newblock RFC 1321, {RFC Editor}, April 1992.
+\newblock \url{http://dx.doi.org/10.17487/RFC1321}.
+
+\bibitem{md5badrfc}
+Sean Turner and Lily Chen.
+\newblock Updated security considerations for the {MD5} message digest and the
+  {HMAC-MD5} algorithms.
+\newblock RFC 6151, {RFC Editor}, March 2011.
+\newblock \url{http://dx.doi.org/10.17487/RFC6151}.
+
+\end{thebibliography}
