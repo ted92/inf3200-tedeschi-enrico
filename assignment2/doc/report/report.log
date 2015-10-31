@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.1415926-2.5-0.9999.3 (MiKTeX 2.9) (preloaded format=xelatex 2015.10.13)  31 OCT 2015 15:49
+This is XeTeX, Version 3.1415926-2.5-0.9999.3 (MiKTeX 2.9) (preloaded format=xelatex 2015.10.13)  31 OCT 2015 19:26
 entering extended mode
 **report.tex
 
@@ -495,33 +495,23 @@ Overfull \hbox (6.0pt too wide) in paragraph at lines 92--93
  [][] 
  []
 
-Missing character: There is no ø in font ptmr7t!
+File: ring.pdf Graphic file (type QTm)
+<use  "ring.pdf" >
+Overfull \hbox (6.0pt too wide) in paragraph at lines 101--102
+ [][] 
+ []
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
 [1
 
 
 ]
-
-LaTeX Warning: Reference `fig:frontend' on page 2 undefined on input line 140.
-
-
-LaTeX Warning: Reference `fig:node' on page 2 undefined on input line 148.
+Missing character: There is no ø in font ptmr7t!
 
 
-LaTeX Warning: Reference `fig:putget' on page 2 undefined on input line 154.
-
-
-LaTeX Warning: Reference `fig:hash_algo' on page 2 undefined on input line 171.
-
-
-
-Package Fancyhdr Warning: \headheight is too small (12.0pt): 
- Make it at least 13.38458pt.
- We now make it that large for the rest of the document.
- This may cause the page layout to be inconsistent, however.
-
-[2]
-
-LaTeX Warning: Reference `fig:scaling' on page 3 undefined on input line 245.
+LaTeX Warning: Reference `fig:scaling' on page 2 undefined on input line 181.
 
 
 ("C:\Users\Enrico\Dropbox\Università Enrico Tedeschi\Master UiT\1 - Year\3200 -
@@ -530,7 +520,13 @@ Underfull \hbox (badness 2556) in paragraph at lines 8--13
 []\OT1/ptm/m/n/11 Hari Bal-akr-ish-nan, M. Frans Kaashoek, David
  []
 
-)
+
+Package Fancyhdr Warning: \headheight is too small (12.0pt): 
+ Make it at least 13.38458pt.
+ We now make it that large for the rest of the document.
+ This may cause the page layout to be inconsistent, however.
+
+[2])
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -542,27 +538,29 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 261.
-[3]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 261.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 197.
+[3
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 197.
 
 ("C:\Users\Enrico\Dropbox\Università Enrico Tedeschi\Master UiT\1 - Year\3200 -
  Distribuited Systems\Assignment1_shared\assignment2\doc\report\report.aux")
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 261.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 261.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 197.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 197.
 
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 261.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 197.
  ) 
 Here is how much of TeX's memory you used:
- 11715 strings out of 428790
- 171897 string characters out of 3163801
+ 11714 strings out of 428790
+ 171872 string characters out of 3163801
  255408 words of memory out of 3000000
- 14987 multiletter control sequences out of 15000+200000
+ 14985 multiletter control sequences out of 15000+200000
  25437 words of font info for 58 fonts, out of 3000000 for 9000
  1096 hyphenation exceptions out of 8191
- 36i,11n,45p,467b,320s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 36i,11n,45p,658b,428s stack positions out of 5000i,500n,10000p,200000b,50000s
 
 Output written on report.pdf (3 pages).

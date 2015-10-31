@@ -95,8 +95,13 @@ When a new leader is needed a process \textit{P} send an election message to all
 \end{figure}
 
 \subsection{Ring algorithm election}
-%TODO: describe the ring algorithm and put an illustration
-
+Every node needs to know only about his successor. When any process figures out that there is no leader anymore, it generates an election message. The message flows through the ring network and every node adds its ID in it. If a node finds its ID in the message it means that that node started the election, so it will be the new leader and a new message will be sent to announce the new coordinator. In the Fig \ref{fig:ring} the node 5 realize that the coordinator is down. It start a new election and at the end it gets the leader role. Then it sends an ok message which tells to the other nodes who is the new coordinator.
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{ring}
+    \caption{Example of how the ring algorithm election works, the leader changes from node 6 to node 5, the election is started from the node 5}
+    \label{fig:ring}
+\end{figure}
 %TODO: talk about leader, algorithm election, and problems in joining and leaving
 
 \section{Design}
@@ -119,62 +124,22 @@ The code were tested before on local machine, using bash scripts and the given v
 
 \subsection{Network Protocol}
 
-The backend nodes accept and retrieve data through a simple HTTP API. HTTP's PUT
-and GET operations are a natural fit for a key-value store, as their semantics
-specify storing and retrieving documents (value) at a given URL path (key).
-Jakobsen and Stenhaug chose this protocol for their starter front-end node and
-we reused it for the storage nodes.
+
 
 
 \subsection{Persistence}
 
-The purpose of this exercise was to investigate the challenges of distributed
-data storage, not storage itself. Therefore, there was no requirement to
-actually persist stored data between runs. So, for simplicity, we did not
-implement any kind of data persistence. Data is simply stored in memory and the
-store starts empty on each test run.
+
 
 
 \subsection{Frontend}
 
-As specified in the requirements, the \textit{Frontend Node} (Fig
-\ref{fig:frontend}) contacts a random backend node for each request, and the
-backend nodes must cooperate to handle the request. This randomness enforces the
-distribution transparency of the data store. The system can store and retrieve
-keys as a whole, no matter which individual node is contacted.
+
 
 
 \subsection{Node}
 
-Each node (Fig \ref{fig:node}) has a simple workflow. It starts running and
-waits for a request, which could be GET or PUT from the frontend node or another
-backend node. For each request, the node hashes the key into the linear key
-space, and checks if it falls within the region assigned to that node. If so,
-the node handles the request by storing the value (for PUT) or returning a
-previously stored value (for GET). If the key does not fall in the node's
-assigned range, it forwards the request to the next node (Fig \ref{fig:putget}).
 
-
-
-The node's logic is split across two classes: \textit{NodeCore} and
-\textit{NodeHttpHandler}. \textit{NodeCore} includes the core logic of deciding
-when to store a key and when to forward a request to the next node.
-\textit{NodeHttpHandler} includes the logic of interpreting HTTP requests and
-formatting HTTP responses. This separation of logic makes it possible to verify
-the core algorithm with isolated unit tests, without having to set up HTTP
-servers.
-
-
-
-
-For hashing, the node uses the MD5 algorithm to map the string key to a numeric
-value, then takes that large integer modulo the number of nodes to get a node
-number (Fig \ref{fig:hash_algo}). As a cryptographic algorithm, it is
-deterministic and it will evenly distribute the keys. MD5 is also
-fast\cite{md5rfc}, so it will not slow down lookups unnecessarily. And though it
-no longer considered suitable for security applications\cite{md5badrfc}, it is
-not being used for security here. We merely need to decide which node should
-store a given key.
 
 \subsection{Environment}
 
@@ -186,37 +151,7 @@ access between machines in the cluster to start and shutdown nodes.
 
 \section{Discussion}
 
-Our design decisions favored simplicity over performance. The simple ring
-structure was easy to implement, but requests may need to be forwarded along
-several nodes in the ring before finding the correct key. The number of hops is
-linear with the number of nodes, $O(n)$. Chord's finger-table
-optimization\cite{chord} finds nodes in $O(\log_2 n)$ hops. We had hoped to
-implement the same strategy in our project but we ran out of time.
-
-The simple synchronous request forwarding strategy is also a potential
-bottleneck. It leaves a thread idle on each node involved in each request,
-waiting until the right key is found before returning it back through all of the
-nodes that were involved. We suspect that, as the number nodes grows or request
-frequency increases, this holding of resources will choke the system. The
-advantage of this approach is its simplicity. The request and response protocol
-is identical between client and front-end, front-end and storage node, and
-between storage nodes themselves. The storage nodes also use the same logic to
-handle requests whether the request comes from the front-end or another node in
-the chain.
-
-Asynchronous message-passing would allow intermediate nodes in a search to free
-resources. The first node could block, and then send a message to the next node.
-If this message included a return address to the first node, then the other
-nodes in the ring could pass it along without leaving connections open or
-blocking. Finally, the node that has the key could send the value to original
-node. When that original node received its answer, it could unblock and send the
-response to the front-end. Such a strategy should be more efficient, but would
-require different message formats for requests and answers, and nodes would need
-logic to receive answer messages and match them to waiting threads to send
-responses. We suspect that the finger tables would give a much larger
-performance boost. Not only that, but with $O(\log_2 n)$ searching, only a few
-nodes would be involved in each search, and the overhead from waiting
-synchronously on just a few nodes might be acceptable.
+%TODO: Talk about why was chosen the ring design over the bully (bully maybe faster because the messages are sent only through the nodes with an higher ID). Consider also the case in which two nodes realize that the leader is missing. Talk about the graceful shutdown so there will be no problem in just know the successor since we won't manage crashes.
 
 
 \section{Evaluation}
