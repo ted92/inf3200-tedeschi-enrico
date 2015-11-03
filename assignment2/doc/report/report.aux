@@ -24,6 +24,22 @@
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{fig:bully}{{1}{1}{Example of how the bully algorithm works, the leader changes from 6 to 5\relax }{figure.caption.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {II-B}}Ring algorithm election}{1}{subsection.2.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Example of how the ring algorithm election works, the leader changes from node 6 to node 5, the election is started from the node 5\relax }}{2}{figure.caption.2}}
+\newlabel{fig:ring}{{2}{2}{Example of how the ring algorithm election works, the leader changes from node 6 to node 5, the election is started from the node 5\relax }{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Design}{2}{section.3}}
+\newlabel{chap:design}{{III}{2}{Design}{section.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation}{2}{section.4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Design and information stored in a single node\relax }}{2}{figure.caption.3}}
+\newlabel{fig:node}{{3}{2}{Design and information stored in a single node\relax }{figure.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Design of the implemented network\relax }}{2}{figure.caption.4}}
+\newlabel{fig:design}{{4}{2}{Design of the implemented network\relax }{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-A}}Languages and Code}{3}{subsection.4.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-B}}Leader election}{3}{subsection.4.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-C}}Join}{3}{subsection.4.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Implementation of the join when a node $N_j$ ask a to a node $N_i$ to join.\relax }}{3}{figure.caption.5}}
+\newlabel{fig:join}{{5}{3}{Implementation of the join when a node $N_j$ ask a to a node $N_i$ to join.\relax }{figure.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-D}}Graceful shut-down}{3}{subsection.4.4}}
+\newlabel{chap:graceful}{{\unhbox \voidb@x \hbox {IV-D}}{3}{Graceful shut-down}{subsection.4.4}{}}
 \citation{rocks}
 \bibstyle{plain}
 \bibdata{report}
@@ -32,19 +48,13 @@
 \bibcite{chord}{{3}{}{{}}{{}}}
 \bibcite{md5rfc}{{4}{}{{}}{{}}}
 \bibcite{md5badrfc}{{5}{}{{}}{{}}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Example of how the ring algorithm election works, the leader changes from node 6 to node 5, the election is started from the node 5\relax }}{2}{figure.caption.2}}
-\newlabel{fig:ring}{{2}{2}{Example of how the ring algorithm election works, the leader changes from node 6 to node 5, the election is started from the node 5\relax }{figure.caption.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {III}Design}{2}{section.3}}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation}{2}{section.4}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-A}}Languages and Code}{2}{subsection.4.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-B}}Network Protocol}{2}{subsection.4.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-C}}Persistence}{2}{subsection.4.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-D}}Frontend}{2}{subsection.4.4}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-E}}Node}{2}{subsection.4.5}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-F}}Environment}{2}{subsection.4.6}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Discussion}{2}{section.5}}
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Evaluation}{2}{section.6}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Nodes/Time scaling table\relax }}{2}{figure.caption.3}}
-\newlabel{tab:scaling}{{3}{2}{Nodes/Time scaling table\relax }{figure.caption.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{2}{section.7}}
 \providecommand\NAT@force@numbers{}\NAT@force@numbers
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Example of graceful shut-down on the node $N_i$, which is also the leader.\relax }}{4}{figure.caption.6}}
+\newlabel{fig:graceful}{{6}{4}{Example of graceful shut-down on the node $N_i$, which is also the leader.\relax }{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-E}}Node}{4}{subsection.4.5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-F}}Environment}{4}{subsection.4.6}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Discussion}{4}{section.5}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Evaluation}{4}{section.6}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Nodes/Time scaling table\relax }}{4}{figure.caption.7}}
+\newlabel{tab:scaling}{{7}{4}{Nodes/Time scaling table\relax }{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{4}{section.7}}

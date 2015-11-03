@@ -11,6 +11,8 @@
 \usepackage{color}
 \usepackage{natbib}
 \usepackage{caption}
+\usepackage{amsmath}
+\usepackage{amssymb}
 
 % Your names in the header
 \pagestyle{fancy}
@@ -102,19 +104,54 @@ Every node needs to know only about his successor. When any process figures out 
     \caption{Example of how the ring algorithm election works, the leader changes from node 6 to node 5, the election is started from the node 5}
     \label{fig:ring}
 \end{figure}
-%TODO: talk about leader, algorithm election, and problems in joining and leaving
+
+A good knowledge of the problems that the scale of nodes could cause is also required, that could be related to security or data consistency. Even if the solution doesn't include the security and data consistency, it should be taken into consideration a good policy of adding and removing a node such as the way of setting the successor and predecessor for every join-leave.
 
 \section{Design}
+\label{chap:design}
+Since the precode was taken from the assignment 1, where a ring network was implemented, for simplicity we decided to keep this network topology also for the assignment 2. The ring algorithm election was chosen as a leader selection method; that because in our previously network topology each nodes knows about its successor, which is also the way that the ring algorithm election works. To implement the Bully algorithm we would have added further information for each node, such as a pointer to all the nodes with an higher ID than the current one.
+\newline
+In our implementation each node has the characteristic showed in Fig \ref{fig:node} so it knows only about the previous node, the next one and who is the leader.
+\newline
+The predecessor was implemented to allow an ordered join in the network.
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{node}
+    \caption{Design and information stored in a single node}
+    \label{fig:node}
+\end{figure}
 
-%TODO: talk about the ring design and which one was chosen in the implementation
+The network was designed, as the Fig \ref{fig:design} shows, to implement the leader election in a ring network topology and it includes also a join and a graceful shut-down of the node. The detection of crashes has not been implemented in this version because not required. In the Fig \ref{fig:design} the leader is the \textit{N\_L} node and when the leader leaves the network a new election must be raised. Furthermore, an external node \textit{N+1} can join the network in the ordered position according to its ID.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{design}
+    \caption{Design of the implemented network}
+    \label{fig:design}
+\end{figure}
+
 
 \section{Implementation}
+As already explained in Chap \ref{chap:design}, a ring network using a ring algorithm election with join and leaving features was implemented.
+
+The python code is made by two main classes, one in which the core of the node is stored and another which contain the \textit{HTML} parser to manage the communication between nodes. The core of the node allows to manage the following messages:
+\begin{itemize}
+\item[--] Join
+\item[--] JoinAccepted
+\item[--] NewPredecessor
+\item[--] Election
+\item[--] ElectionResult
+\item[--] GetNeighbors
+\item[--] GetLeader
+\item[--] NewSuccessor %todo to implement??)
+\item[--] ShutDown %todo to implement??)
+\end{itemize}
 
 %TODO: talk about why the ring algorithm was chosen (because from the previous version of the implemented network each node has information about his successor -- which is required for the ring algorithm)
 
 \subsection{Languages and Code}
 
-Our solution is implemented in a mix of Python and Bash script, Python for the
+Our solution was implemented in a mix of Python and Bash script, Python for the
 actual node implementation, and a Bash script to communicate through the network created, adding and removing nodes.
 
 We started with skeleton code by our first assignment for what concerns the node and the script code. 
@@ -122,27 +159,88 @@ The code was rearranged by removing the front-end node and by adding some proper
 
 The code were tested before on local machine, using bash scripts and the given visual test code from Einar Holsbø Jakobsen and Magnus Stenhaug and then on the uvrocks cluster.
 
-\subsection{Network Protocol}
+\subsection{Leader election}
+The leader election is implemented by using the \textbf{ring algorithm election} (see Fig \ref{fig:ring}). Every node knows about which one is the leader and a new election is raised only if the current leader is gracefully shut down (chap \ref{chap:graceful}). A new election is invoked from the next-node of the previous coordinator. The election will go through all the network and each node will add its ID in a pile. When a node find its ID in the pile it will be the new leader and it will send an \textit{OK} message to all the other nodes, containing the information about who is the new leader. The Fig \ref{fig:graceful} shows the raising of a new election, where \textit{N\_L} was the previous leader and its successor, \textit{N+1}, starts a new election.
+\newline
+Since the network doesn't detect any crashes, but allows a graceful shut-down of the nodes, the problem that two nodes realise that the coordinator is missing is not taken into consideration.
+\newline
+The following pseudocode is called when an \textit{Election} message type is raised and represent the core implementation of the election algorithm.
+\begin{lstlisting}
+if no successor
+    # Single node. You are already the leader
+    return OK
+if ID in message
+    # You win. Create announce message
+    announce = ElectionResult(node.next - OK)
+    return OK -- with announce
+else
+    # add your name and forward.
+    fwd = Election(add ID - node.next)
+    return OK -- with fwd
+\end{lstlisting}
 
 
+\subsection{Join}
+To implement the scaling of nodes, a \textit{join} function is fundamental together with the \textit{leave\_network} one. A node can join in every part of the network. Each node has a personal ID obtained by \textbf{hashing its IP address}. To guarantee an ordered join in the network, when a node $N_j$ asks to join to a node $N_i$ , it checks that its ID is in between the ID of $N_i$ and the ID of $N_{i+1}$ .
+\newline
+It is clear then, that a node $N_j$ is insert in the \textit{i} position only if the following formula is respected:
+\[
+N_{i} < N_j < N_{i+1}
+\]
+where $N_i$ is the ID number of the node which got the join request, $N_{i+1}$ the ID of its successor and $N_{j}$ the ID of the node who wants to join the network. Once that the right place is found, the properties of the new network are setted as the following:
+\begin{itemize}
+\item[] $\begin{aligned}
+    successor(N_j) \leftarrow successor(N_i)
+\end{aligned}$
+\item[] $\begin{aligned}
+    predecessor(N_j) \leftarrow N_i
+\end{aligned}$
+\item[] $\begin{aligned}
+    leader(N_j) \leftarrow leader(N_i)
+\end{aligned}$
+\item[] $\begin{aligned}
+    successor(N_i) \leftarrow N_j
+\end{aligned}$
+\item[] $\begin{aligned}
+    predecessor(N_{i+1}) \leftarrow N_i
+\end{aligned}$
+\end{itemize}
+A graphic implementation of the join is represented in the Fig \ref{fig:join}.
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{join}
+    \caption{Implementation of the join when a node $N_j$ ask a to a node $N_i$ to join.}
+    \label{fig:join}
+\end{figure}
+
+\subsection{Graceful shut-down}
+\label{chap:graceful}
+The other part involved for guarantee the scalability is the \textit{node leaving} function. As said before, we don't provide fault tolerance and only a graceful shut-down of the nodes is implemented. When a simple node is shut-down, before leaving the network, it gives the information about its predecessor and successor to its neighbours. If is the coordinator that leaves the network (like in Fig \ref{fig:graceful}) then the successor of the leaving node raise an election message.
+\newline
+When a node $N_i$ leaves the network the following equations are implemented:
+\begin{itemize}
+\item[] $\begin{aligned}
+    successor(N_{i-1}) \leftarrow N_{i+1}
+\end{aligned}$
+\item[] $\begin{aligned}
+    predecessor(N_{i+1}) \leftarrow N_{i-1}
+\end{aligned}$
+\end{itemize}
 
 
-\subsection{Persistence}
-
-
-
-
-\subsection{Frontend}
-
-
-
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{graceful}
+    \caption{Example of graceful shut-down on the node $N_i$, which is also the leader.}
+    \label{fig:graceful}
+\end{figure}
 
 \subsection{Node}
 
 
 
 \subsection{Environment}
-
+%TODO
 Our code was written to run on the Rocks Cluster distribution\cite{rocks}, and
 makes some assumptions about that environment. We rely on the cluster's shared
 filesystem for distributing program code to servers. And we rely on easy SSH
@@ -151,10 +249,11 @@ access between machines in the cluster to start and shutdown nodes.
 
 \section{Discussion}
 
-%TODO: Talk about why was chosen the ring design over the bully (bully maybe faster because the messages are sent only through the nodes with an higher ID). Consider also the case in which two nodes realize that the leader is missing. Talk about the graceful shutdown so there will be no problem in just know the successor since we won't manage crashes.
+%TODO: Talk about why was chosen the ring design over the bully (bully maybe faster because the messages are sent only through the nodes with an higher ID). Consider also the case in which two nodes realize that the leader is missing. Talk about the graceful shutdown so there will be no problem in just know the successor since we won't manage crashes. Talk about NO fault tolerance, scalability implemented, how it could be improved (nextnext node).
 
 
 \section{Evaluation}
+%TODO: TEST TIME OF ELECTION WITH DIFFERENT NUMBER OF NODES (SCALING). Test also the join time(optional)
 For the evaluation node scaling has been considered. The function \textit{storage\_frontend} has been timed sending five hundred requests (GET/PUT) to the nodes network. The evaluation has been done considering the scale on the number of nodes and for each, 10 tests were taken into consideration.
 \newline
 The number of nodes and the average time of 10 computations is represented in the table in Fig \ref{tab:scaling}.
