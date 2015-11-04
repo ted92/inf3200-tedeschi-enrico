@@ -7,7 +7,7 @@ import logging
 
 loghandler = logging.StreamHandler()
 loghandler.setFormatter(logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    '%(asctime)s - %(name)s - %(levelname)s - %(core)s - %(message)s'))
 
 logger = logging.getLogger("node_core")
 logger.setLevel(logging.WARN)
@@ -109,10 +109,9 @@ class NodeCore:
         # If a node is in a network by itself, it is the leader.
         self.leader = descriptor
 
-        self.debug("New node core created")
+        self.logger = logging.LoggerAdapter(logger, {'core':self.descriptor})
 
-    def debug(self, msg):
-        logger.debug("%s -- %s" % (self.descriptor, msg))
+        self.logger.debug("New node core created")
 
     def responsible_for_key(self, key):
         """ Hashes the key and decides if the hash is in range to be handled by this node """
@@ -158,10 +157,10 @@ class NodeCore:
                 newmsgs = []
 
                 if self.predecessor==None:
-                    self.debug("Join(%s): accepting" % (n,))
+                    self.logger.debug("Join(%s): accepting", n)
                     self.predecessor = n
                 else:
-                    self.debug("Join(%s): accepting and notifying %s" % (n,s))
+                    self.logger.debug("Join(%s): accepting and notifying %s", n,s)
                     newmsgs.append(
                             NewPredecessor( destination=s, predecessor=n ) )
 
@@ -174,29 +173,29 @@ class NodeCore:
                 return GenericOk(newmsgs)
 
             else:
-                self.debug("Join(%s): forwarding to %s" % (n,s))
+                self.logger.debug("Join(%s): forwarding to %s", n,s)
                 return GenericOk([ msg._replace(destination=s) ])
 
         elif isinstance(msg, JoinAccepted):
-            self.debug("JoinAccepted: New successor=%s, predecessor=%s" % (msg.successor,msg.predecessor))
+            self.logger.debug("JoinAccepted: New successor=%s, predecessor=%s", msg.successor, msg.predecessor)
             self.successor = msg.successor
             self.predecessor = msg.predecessor
             self.leader = msg.leader
             return GenericOk()
 
         elif isinstance(msg, NewPredecessor):
-            self.debug("NewPredecessor: %s" % (msg.predecessor))
+            self.logger.debug("NewPredecessor: %s", msg.predecessor)
             self.predecessor = msg.predecessor
             return GenericOk()
 
         elif isinstance(msg, Election):
             if self.successor == None:
                 # Single node. You are already the leader. No one else to elect.
-                self.debug("Election: Single node. I am already my own leader.")
+                self.logger.debug("Election: Single node. I am already my own leader.")
                 return GenericOk()
             if self.descriptor in msg.participants:
                 # Message has re-reached you. You win.
-                self.debug("Election: Message returned to me. I am winner.")
+                self.logger.debug("Election: Message returned to me. I am winner.")
                 announce = ElectionResult(
                         destination = self.successor,
                         new_leader = self.descriptor
@@ -204,7 +203,7 @@ class NodeCore:
                 return GenericOk(new_messages=[announce])
             else:
                 # You are the next participant, add your name and forward.
-                self.debug("Election: forwarding to %s" %(self.successor))
+                self.logger.debug("Election: forwarding to %s", self.successor)
                 fwd = Election(
                         destination = self.successor,
                         participants = msg.participants + [self.descriptor]
@@ -214,12 +213,12 @@ class NodeCore:
         elif isinstance(msg, ElectionResult):
             self.leader = msg.new_leader
             if msg.new_leader == self.descriptor:
-                self.debug("ElectionResult(%s): message has completed round. I am confirmed leader." % (msg.new_leader))
+                self.logger.debug("ElectionResult(%s): message has completed round. I am confirmed leader.", msg.new_leader)
                 # Message has completed it's trip around the ring.
                 # You are confirmed as the winner.
                 return GenericOk()
             else:
-                self.debug("ElectionResult(%s): forwarding to %s" % (msg.new_leader, self.successor))
+                self.logger.debug("ElectionResult(%s): forwarding to %s", msg.new_leader, self.successor)
                 return GenericOk(new_messages = [
                     msg._replace(destination = self.successor)
                     ])
