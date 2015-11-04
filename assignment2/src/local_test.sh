@@ -36,13 +36,13 @@ test_benchmark_tool() {
         set -x
         python -u ./node2_http.py localhost:8000 2>/dev/null &
         sleep 1
-        python -u ./node2_http.py localhost:8001 --join localhost:8000 2>/dev/null &
+        python -u ./node2_http.py localhost:8001 --join localhost:8000 &
         sleep 1
-        python -u ./node2_http.py localhost:8002 --join localhost:8000 2>/dev/null &
+        python -u ./node2_http.py localhost:8002 --join localhost:8000 &
         sleep 1
-        python -u ./node2_http.py localhost:8003 --join localhost:8000 2>/dev/null &
+        python -u ./node2_http.py localhost:8003 --join localhost:8000 &
         sleep 1
-        python -u ./node2_http.py localhost:8004 --join localhost:8000 2>/dev/null &
+        python -u ./node2_http.py localhost:8004 --join localhost:8000 &
         sleep 1
         python -u leader_benchmark.py --ip localhost --port 8000
         sleep 1

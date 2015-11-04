@@ -285,6 +285,10 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(hr.body)
 
+    def log_message(self, *args):
+        """ Noop override to suppress normal request logging """
+        return
+
 
 
 # ----------------------------------------------------------
