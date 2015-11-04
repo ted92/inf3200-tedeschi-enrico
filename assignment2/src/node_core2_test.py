@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import unittest
 from pprint import pformat
 
@@ -100,6 +101,14 @@ def node_ranked(rank):
     return desc
 
 class TestNodeCore(unittest.TestCase):
+
+    def setUp(self):
+        # Allow override of log level in test to help debug.
+        # Save to restore after.
+        self.saved_log_level = ncore.logger.level
+
+    def tearDown(self):
+        ncore.logger.setLevel(self.saved_log_level)
 
     def test_single_node_no_successor(self):
         d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
