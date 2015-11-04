@@ -55,7 +55,6 @@
 \author{Enrico Tedeschi\\ete011@post.uit.no
     \and Mike Murphy\\mmu019@post.uit.no}
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END HEADERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -143,8 +142,8 @@ The python code is made by two main classes, one in which the core of the node i
 \item[--] ElectionResult
 \item[--] GetNeighbors
 \item[--] GetLeader
-\item[--] NewSuccessor %todo to implement??)
-\item[--] ShutDown %todo to implement??)
+\item[--] NewSuccessor 
+\item[--] ShutDown
 \end{itemize}
 
 %TODO: talk about why the ring algorithm was chosen (because from the previous version of the implemented network each node has information about his successor -- which is required for the ring algorithm)
@@ -160,7 +159,7 @@ The code was rearranged by removing the front-end node and by adding some proper
 The code were tested before on local machine, using bash scripts and the given visual test code from Einar Holsbø Jakobsen and Magnus Stenhaug and then on the uvrocks cluster.
 
 \subsection{Leader election}
-The leader election is implemented by using the \textbf{ring algorithm election} (see Fig \ref{fig:ring}). Every node knows about which one is the leader and a new election is raised only if the current leader is gracefully shut down (chap \ref{chap:graceful}). A new election is invoked from the next-node of the previous coordinator. The election will go through all the network and each node will add its ID in a pile. When a node find its ID in the pile it will be the new leader and it will send an \textit{OK} message to all the other nodes, containing the information about who is the new leader. The Fig \ref{fig:graceful} shows the raising of a new election, where \textit{N\_L} was the previous leader and its successor, \textit{N+1}, starts a new election.
+The leader election is implemented by using the \textbf{ring algorithm election} (see Fig \ref{fig:ring}). Every node knows about which one is the leader and a new election is raised only if the current leader is gracefully shut down (chap \ref{chap:graceful}). A new election is invoked from the next-node of the previous coordinator. The election will go through all the network and each node will add its ID in a pile. When a node find its ID in the pile it will be the new leader and it will send an \textit{OK} message to all the other nodes, containing the information about who is the new leader. The Fig \ref{fig:graceful} shows the raising of a new election caused by the shutting down of the current leader $N_i$ ; is its successor, $N_{i+1}$ , which takes care to start a new election.
 \newline
 Since the network doesn't detect any crashes, but allows a graceful shut-down of the nodes, the problem that two nodes realise that the coordinator is missing is not taken into consideration.
 \newline
@@ -227,7 +226,6 @@ When a node $N_i$ leaves the network the following equations are implemented:
 \end{aligned}$
 \end{itemize}
 
-
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.5\textwidth]{graceful}
@@ -236,24 +234,29 @@ When a node $N_i$ leaves the network the following equations are implemented:
 \end{figure}
 
 \subsection{Node}
-
-
+Every node, as showed already in Fig \ref{fig:node}, keep informations about its successor, predecessor and the network leader. In each node are defined all the type of messages that it can receive or send and once they are active they are doing nothing besides waiting that some action such as a join or a leave is raised.
+\newline
+If a join request is raised on the node, it sends to the new node the pointer to its successor, in that way the joining node can use it as its successor in case of accept and as a next node to call in case of join refused.
+If a graceful shut-down is called on the current node, it checks whether itself is the coordinator or not; if yes then raise a new election on the next node. Before going down it sends to its successor a pointer to its predecessor and to its predecessor a pointer to its successor.
+\newline
+When a new election is raised on the current node, it checks if its ID is in the list received (which is empty when the election begins), if yes then the current node is the new coordinator if not it puts its ID in the list and forward the election message. When the election is completed the pointer to the new leader is setted.
 
 \subsection{Environment}
-%TODO
 Our code was written to run on the Rocks Cluster distribution\cite{rocks}, and
 makes some assumptions about that environment. We rely on the cluster's shared
 filesystem for distributing program code to servers. And we rely on easy SSH
 access between machines in the cluster to start and shutdown nodes.
 
-
 \section{Discussion}
-
-%TODO: Talk about why was chosen the ring design over the bully (bully maybe faster because the messages are sent only through the nodes with an higher ID). Consider also the case in which two nodes realize that the leader is missing. Talk about the graceful shutdown so there will be no problem in just know the successor since we won't manage crashes. Talk about NO fault tolerance, scalability implemented, how it could be improved (nextnext node).
+The leader election with the Bully algorithm is faster than the ring one because the message sent concern only the nodes with an higher ID and not all the network. However the join and leave operation with the Bully are more expensive.
+Even though the Bully algorithm may be faster for what concern the leader election, an implementation with the ring algorithm election was chosen to avoid any changes to the network topology already built. The implementation was more intuitive and the information which each node has to manage are less expensive when there is a join or a leave. Indeed with the Bully algorithm implementation each node need to know informations about every node with an higher ID, so for each join is necessary to involve the whole network, it doesn't matter if the position choose is already the right one; in our implementation instead, the only nodes involved are the neighbours of the node which get the join request and eventually the next nodes if the position requested is not immediately the right one. Is good to take this into consideration because if the network has a very frequent and high variation of number of nodes then is preferred to have a faster implementation of the join and leave than a faster leader election.
+\newline
+If we consider \textbf{fault tolerance} is good to analyse how to act in case of crashes. A simple solution could be implementing for each node a \textit{next\_next node} pointer, which means that if a node $N_i$ can't reach the node $N_{i+1}$ it jumps directly to the $N_{i+2}$ and the $N_{i+1}$ is considered out of the network. The side effect is if two consecutive nodes crash at the same time. Another thing to consider could be if two nodes crash at the same time and one of them was the coordinator. With the \textit{next\_next node} pointer it could be that two nodes realise at the same time that the leader is missing so they both start a new election.
 
 
 \section{Evaluation}
 %TODO: TEST TIME OF ELECTION WITH DIFFERENT NUMBER OF NODES (SCALING). Test also the join time(optional)
+
 For the evaluation node scaling has been considered. The function \textit{storage\_frontend} has been timed sending five hundred requests (GET/PUT) to the nodes network. The evaluation has been done considering the scale on the number of nodes and for each, 10 tests were taken into consideration.
 \newline
 The number of nodes and the average time of 10 computations is represented in the table in Fig \ref{tab:scaling}.
