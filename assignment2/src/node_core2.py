@@ -7,10 +7,10 @@ import logging
 
 loghandler = logging.StreamHandler()
 loghandler.setFormatter(logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(core)s - %(message)s'))
+    '%(msecs)03.4f %(name)-12s %(levelname)-8s -- %(core)s - %(message)s'))
 
 logger = logging.getLogger("node_core")
-logger.setLevel(logging.WARN)
+logger.setLevel(logging.INFO)
 logger.addHandler(loghandler)
 
 def node_hash(s):
