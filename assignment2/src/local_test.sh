@@ -57,15 +57,24 @@ test_election() {
     echo
 
     (
-        set -x
+        # set -x
+        MAX=10
+
         python -u ./node2_http.py localhost:8000 &
         sleep 1
-        python -u ./node2_http.py localhost:8001 --join localhost:8000 &
-        sleep 1
-        python -u ./node2_http.py localhost:8002 --join localhost:8001 &
-        sleep 1
-        curl -vX POST http://localhost:8000/election
-        sleep 3
+
+        for i in $(seq 1 $MAX)
+        do
+            let n=$i+1
+            echo "Starting another node. Total: $n"
+            let PORT=8000+$i
+            python -u ./node2_http.py localhost:$PORT --join localhost:8000 &
+            sleep 1
+            echo "Kicking off election with $n nodes"
+            curl -X POST http://localhost:$PORT/election
+            sleep 1
+        done
+
         kill $(jobs -p)
     )
 }

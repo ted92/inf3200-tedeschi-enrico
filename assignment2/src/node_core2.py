@@ -229,8 +229,9 @@ class NodeCore:
                 # You are confirmed as the winner.
 
                 election_confirmed_time = time.time()
-                self.logger.info("ElectionResult: Confirmed in %1.3fs after winning",
-                        election_confirmed_time - self.election_won_time)
+                self.logger.info("ElectionResult: Confirmed in %1.3fs after winning. Total election time %1.3fs.",
+                        election_confirmed_time - self.election_won_time,
+                        election_confirmed_time - self.election_start_time)
 
                 return GenericOk()
             else:
