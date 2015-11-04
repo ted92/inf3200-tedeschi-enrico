@@ -15,6 +15,28 @@ def node_ranked(rank):
 
 class TestParseBuild(unittest.TestCase):
 
+    def test_split_empty(self):
+        s = "\n".strip()
+        self.assertEqual(s, "")
+
+        l = "".split("\n")
+        self.assertEqual(l, [''])
+
+    def test_node_descriptor_list_empty(self):
+        l = nhttp.parse_node_descriptor_list("\n")
+        self.assertEqual(l, [])
+
+    def test_node_descriptor_list_single(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        l = nhttp.parse_node_descriptor_list("localhost:8000\n")
+        self.assertEqual(l, [d0])
+
+    def test_node_descriptor_list_double(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        l = nhttp.parse_node_descriptor_list("localhost:8000\nlocalhost:8001\n")
+        self.assertEqual(l, [d0,d1])
+
     def test_build_join(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
@@ -34,7 +56,6 @@ class TestParseBuild(unittest.TestCase):
         req = nhttp.build_request(msg)
         parsed = nhttp.parse_request(req)
         self.assertEqual(parsed, msg)
-
 
     def test_build_join_accept(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")

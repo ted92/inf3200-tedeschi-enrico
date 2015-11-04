@@ -94,7 +94,11 @@ def build_node_descriptor_list(node_list):
     return "\n".join( [n.host_port for n in node_list] )
 
 def parse_node_descriptor_list(s):
-    return [ncore.NodeDescriptor(host_port=hp) for hp in s.strip().split("\n")]
+    s = s.strip()
+    if s=='':
+        return []
+    else:
+        return [ncore.NodeDescriptor(host_port=hp) for hp in s.split("\n")]
 
 
 def build_request(msg):
