@@ -103,9 +103,8 @@ def node_ranked(rank):
 class TestNodeCore(unittest.TestCase):
 
     def setUp(self):
-        # Allow override of log level in test to help debug.
-        # Save to restore after.
         self.saved_log_level = ncore.logger.level
+        ncore.logger.setLevel(logging.CRITICAL)
 
     def tearDown(self):
         ncore.logger.setLevel(self.saved_log_level)

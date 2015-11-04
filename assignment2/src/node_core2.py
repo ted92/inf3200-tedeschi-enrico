@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import hashlib
 import collections
+import hashlib
 import logging
+import time
 
 loghandler = logging.StreamHandler()
 loghandler.setFormatter(logging.Formatter(
@@ -111,6 +112,10 @@ class NodeCore:
 
         self.logger = logging.LoggerAdapter(logger, {'core':self.descriptor})
 
+        # For tracking election durations
+        self.election_start_time = time.time()
+        self.election_won_time = time.time()
+
         self.logger.debug("New node core created")
 
     def responsible_for_key(self, key):
@@ -196,6 +201,11 @@ class NodeCore:
             if self.descriptor in msg.participants:
                 # Message has re-reached you. You win.
                 self.logger.debug("Election: Message returned to me. I am winner.")
+
+                self.election_won_time = time.time()
+                self.logger.info("Election: Won in %1.3fs",
+                        self.election_won_time - self.election_start_time)
+
                 announce = ElectionResult(
                         destination = self.successor,
                         new_leader = self.descriptor
@@ -204,6 +214,7 @@ class NodeCore:
             else:
                 # You are the next participant, add your name and forward.
                 self.logger.debug("Election: forwarding to %s", self.successor)
+                self.election_start_time = time.time()
                 fwd = Election(
                         destination = self.successor,
                         participants = msg.participants + [self.descriptor]
@@ -216,6 +227,11 @@ class NodeCore:
                 self.logger.debug("ElectionResult(%s): message has completed round. I am confirmed leader.", msg.new_leader)
                 # Message has completed it's trip around the ring.
                 # You are confirmed as the winner.
+
+                election_confirmed_time = time.time()
+                self.logger.info("ElectionResult: Confirmed in %1.3fs after winning",
+                        election_confirmed_time - self.election_won_time)
+
                 return GenericOk()
             else:
                 self.logger.debug("ElectionResult(%s): forwarding to %s", msg.new_leader, self.successor)
