@@ -102,6 +102,26 @@ class TestParseBuild(unittest.TestCase):
         parsed = nhttp.parse_request(req)
         self.assertEqual(parsed, msg)
 
+    def test_build_new_successor(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.NewSuccessor(destination=d1, successor=d0)
+
+        req = nhttp.build_request(msg)
+
+        self.assertEqual(req.method, "PUT")
+        self.assertEqual(req.path, "/successor")
+        self.assertEqual(req.body, "localhost:8000")
+
+    def test_parse_new_successor(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.NewSuccessor(destination=d1, successor=d0)
+
+        req = nhttp.build_request(msg)
+        parsed = nhttp.parse_request(req)
+        self.assertEqual(parsed, msg)
+
     def test_build_get_neighbors(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         msg = ncore.GetNeighbors(destination=d0)

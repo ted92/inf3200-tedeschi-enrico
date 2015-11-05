@@ -85,6 +85,7 @@ GetLeader = collections.namedtuple("GetLeader",
 
 Shutdown = collections.namedtuple("Shutdown",
         ["destination"])
+Shutdown.__new__.__defaults__ = (None,)
 
 # Direct Node Responses
 # All direct responses should have a 'new_messages' field

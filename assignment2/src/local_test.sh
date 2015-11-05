@@ -79,8 +79,41 @@ test_election() {
     )
 }
 
+test_shutdown() {
+    echo
+    echo "---------------------------------------------------------------------"
+    echo "Test shutdown"
+    echo
+
+    (
+        # set -x
+        MAX=10
+
+        python -u ./node2_http.py localhost:8000 &
+        sleep 1
+        python -u ./node2_http.py localhost:8001 --join localhost:8000 &
+        sleep 1
+        python -u ./node2_http.py localhost:8002 --join localhost:8000 &
+        sleep 1
+        python -u ./node2_http.py localhost:8003 --join localhost:8000 &
+        sleep 1
+        python -u ./node2_http.py localhost:8004 --join localhost:8000 &
+        sleep 1
+
+        kill %1; sleep 1
+        kill %2; sleep 1
+        kill %3; sleep 1
+        kill %4; sleep 1
+        kill %5
+
+        kill -9 $(jobs -p)
+    )
+}
+
 test_join
 sleep 2
 test_benchmark_tool
 sleep 2
 test_election
+sleep 2
+test_shutdown

@@ -129,6 +129,13 @@ leader = %s
                 path = "/predecessor",
                 body = msg.predecessor.host_port)
 
+    if isinstance(msg, ncore.NewSuccessor):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "PUT",
+                path = "/successor",
+                body = msg.successor.host_port)
+
     if isinstance(msg, ncore.Election):
         return HttpRequest(
                 destination = msg.destination,
@@ -176,6 +183,10 @@ def parse_request(hr):
     if hr.path=="/predecessor" and hr.method=="PUT":
         p = parse_single_node_descriptor(hr.body)
         return ncore.NewPredecessor(destination=hr.destination, predecessor=p)
+
+    if hr.path=="/successor" and hr.method=="PUT":
+        p = parse_single_node_descriptor(hr.body)
+        return ncore.NewSuccessor(destination=hr.destination, successor=p)
 
     if hr.path=="/election" and hr.method=="POST":
         p = parse_node_descriptor_list(hr.body)
@@ -275,8 +286,7 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         action = server_node_core.handle_message(msg)
 
         self.send_response_for_action(action)
-        for newmsg in action.new_messages:
-            message_queue.put(newmsg)
+        message_queue.put_all(action.new_messages)
 
     def send_response_for_action(self, action):
         hr = build_response(action)
@@ -347,6 +357,10 @@ class MessageQueue:
     def put(self, msg):
         self.outbox.put(msg)
 
+    def put_all(self, msgs):
+        for msg in msgs:
+            self.put(msg)
+
     def stop(self):
         """ Waits until current messages are sent, then quits """
         logger.debug("Stopping message queue after empty...")
@@ -387,6 +401,8 @@ if __name__ == '__main__':
 
     def handler(signum, frame):
         logger.info("Caught signal %d, stopping http server..." % signum)
+        result = server_node_core.handle_message(ncore.Shutdown())
+        message_queue.put_all(result.new_messages)
         httpd.stop()
         message_queue.stop()
     signal.signal(signal.SIGINT, handler)
