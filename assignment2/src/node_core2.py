@@ -202,8 +202,17 @@ class NodeCore:
 
         elif isinstance(msg, NewSuccessor):
             self.logger.debug("NewSuccessor: %s", msg.successor)
+            previous_successor = self.successor
             self.successor = msg.successor
-            return GenericOk()
+
+            if previous_successor == self.leader:
+                # NewSuccessor message is only sent when successor shutting down.
+                self.logger.info("Previous leader shutting down: telling new successor (%s) to call for election", self.successor)
+                return GenericOk(new_messages=[
+                    Election(destination=self.successor)
+                    ])
+            else:
+                return GenericOk()
 
         elif isinstance(msg, Election):
             if self.successor == None:
