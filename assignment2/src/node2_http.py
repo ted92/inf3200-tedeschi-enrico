@@ -1,26 +1,35 @@
 #!/usr/bin/env python
 
 import BaseHTTPServer
+import Queue
 import argparse
 import collections
 import httplib
-import Queue
+import logging
 import signal
+import sys
 import threading
 
 import node_core2 as ncore
 
-# Verbose output trace
+# Logging Setup
 
-verbose = False
+loghandler = logging.StreamHandler(sys.stdout)
+loghandler.setFormatter(logging.Formatter(ncore.logformat))
 
-def verbosep(msg):
-    """ Print string if verbose output is on """
-    if verbose:
-        if server_node_core:
-            print("%s: %s" % (server_node_core.descriptor.host_port, msg))
+logger = logging.getLogger("node_http")
+logger.setLevel(logging.INFO)
+logger.addHandler(loghandler)
+
+class CoreFilter(logging.Filter):
+    def filter(self, record):
+        if (server_node_core):
+            record.core = server_node_core.descriptor
         else:
-            print(strs)
+            record.core = "no core"
+        return True
+
+logger.addFilter(CoreFilter())
 
 
 # HTTP Abstractions
@@ -85,7 +94,11 @@ def build_node_descriptor_list(node_list):
     return "\n".join( [n.host_port for n in node_list] )
 
 def parse_node_descriptor_list(s):
-    return [ncore.NodeDescriptor(host_port=hp) for hp in s.strip().split("\n")]
+    s = s.strip()
+    if s=='':
+        return []
+    else:
+        return [ncore.NodeDescriptor(host_port=hp) for hp in s.split("\n")]
 
 
 def build_request(msg):
@@ -115,6 +128,13 @@ leader = %s
                 method = "PUT",
                 path = "/predecessor",
                 body = msg.predecessor.host_port)
+
+    if isinstance(msg, ncore.NewSuccessor):
+        return HttpRequest(
+                destination = msg.destination,
+                method = "PUT",
+                path = "/successor",
+                body = msg.successor.host_port)
 
     if isinstance(msg, ncore.Election):
         return HttpRequest(
@@ -164,6 +184,10 @@ def parse_request(hr):
         p = parse_single_node_descriptor(hr.body)
         return ncore.NewPredecessor(destination=hr.destination, predecessor=p)
 
+    if hr.path=="/successor" and hr.method=="PUT":
+        p = parse_single_node_descriptor(hr.body)
+        return ncore.NewSuccessor(destination=hr.destination, successor=p)
+
     if hr.path=="/election" and hr.method=="POST":
         p = parse_node_descriptor_list(hr.body)
         return ncore.Election(destination=hr.destination, participants=p)
@@ -201,7 +225,7 @@ def build_response(dr):
 
 def send_message(msg):
     """ Send a message to another node """
-    verbosep("Sending message: %s" % (msg,))
+    logger.debug("Sending message: %s" % (msg,))
     hr = build_request(msg)
     send_request(hr)
 
@@ -211,7 +235,7 @@ def send_request(hr):
 
     conn = httplib.HTTPConnection(hr.host, hr.port)
     conn.request(hr.method, hr.path, hr.body)
-    verbosep("Sent request: %s:%d %s %s '%s'" %
+    logger.debug("Sent request: %s:%d %s %s '%s'" %
             (hr.host, hr.port, hr.method, hr.path, hr.body))
 
     # Must read response even if we don't do anything with it.
@@ -227,7 +251,7 @@ def send_request(hr):
     if response.status!=200:
         raise RuntimeException("Got bad response: %s" % response.status)
 
-    verbosep("Got OK response: %s %s" % (hr.method, hr.path))
+    logger.debug("Got OK response: %s %s" % (hr.method, hr.path))
 
 
 # Actually Run as a Server
@@ -248,7 +272,7 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.handle_request("PUT")
 
     def handle_request(self, method):
-        verbosep("Receiving request: %s %s" % (method, self.path))
+        logger.debug("Receiving request: %s %s" % (method, self.path))
         content_length = int(self.headers.getheader('content-length', 0))
         body = self.rfile.read(content_length)
 
@@ -257,20 +281,23 @@ class HttpRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 method = method,
                 path = self.path,
                 body = body))
-        verbosep("Parsed message: %s" % (msg,))
+        logger.debug("Parsed message: %s" % (msg,))
 
         action = server_node_core.handle_message(msg)
 
         self.send_response_for_action(action)
-        for newmsg in action.new_messages:
-            message_queue.put(newmsg)
+        message_queue.put_all(action.new_messages)
 
     def send_response_for_action(self, action):
         hr = build_response(action)
-        verbosep("Responding with %s" % (action,))
+        logger.debug("Responding with %s" % (action,))
         self.send_response(hr.status)
         self.end_headers()
         self.wfile.write(hr.body)
+
+    def log_message(self, *args):
+        """ Noop override to suppress normal request logging """
+        return
 
 
 
@@ -314,7 +341,7 @@ class MessageQueue:
 
     def start(self):
 
-        verbosep("Starting message queue")
+        logger.debug("Starting message queue")
         def sender():
             while True:
                 msg = self.outbox.get()
@@ -330,11 +357,15 @@ class MessageQueue:
     def put(self, msg):
         self.outbox.put(msg)
 
+    def put_all(self, msgs):
+        for msg in msgs:
+            self.put(msg)
+
     def stop(self):
         """ Waits until current messages are sent, then quits """
-        verbosep("Stopping message queue after empty...")
+        logger.debug("Stopping message queue after empty...")
         self.outbox.join()
-        verbosep("Message queue empty, shutting down.")
+        logger.debug("Message queue empty, shutting down.")
 
 
 
@@ -349,13 +380,16 @@ if __name__ == '__main__':
             help="another server to join")
     args = parser.parse_args()
 
-    verbose = args.verbose
+    if args.verbose:
+        ncore.logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+
     descriptor = ncore.NodeDescriptor(host_port=args.host_port)
     join_descriptor = ncore.NodeDescriptor(host_port=args.join) if args.join else None
     server_node_core = ncore.NodeCore(descriptor)
 
     # Start the webserver which handles incomming requests
-    verbosep("Starting HTTP server: %s, %s" % (descriptor, descriptor.rank))
+    logger.info("Starting HTTP server: %s, %s" % (descriptor, descriptor.rank))
     httpd = NodeServer((descriptor.host, descriptor.port), HttpRequestHandler)
     server_thread = threading.Thread(target = httpd.serve)
     server_thread.daemon = True
@@ -366,10 +400,13 @@ if __name__ == '__main__':
     message_queue.start()
 
     def handler(signum, frame):
-        verbosep("Caught signal %d, stopping http server..." % signum)
+        logger.info("Caught signal %d, stopping http server..." % signum)
+        result = server_node_core.handle_message(ncore.Shutdown())
+        message_queue.put_all(result.new_messages)
         httpd.stop()
         message_queue.stop()
     signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGTERM, handler)
 
     # Join network
     if join_descriptor:

@@ -15,6 +15,28 @@ def node_ranked(rank):
 
 class TestParseBuild(unittest.TestCase):
 
+    def test_split_empty(self):
+        s = "\n".strip()
+        self.assertEqual(s, "")
+
+        l = "".split("\n")
+        self.assertEqual(l, [''])
+
+    def test_node_descriptor_list_empty(self):
+        l = nhttp.parse_node_descriptor_list("\n")
+        self.assertEqual(l, [])
+
+    def test_node_descriptor_list_single(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        l = nhttp.parse_node_descriptor_list("localhost:8000\n")
+        self.assertEqual(l, [d0])
+
+    def test_node_descriptor_list_double(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        l = nhttp.parse_node_descriptor_list("localhost:8000\nlocalhost:8001\n")
+        self.assertEqual(l, [d0,d1])
+
     def test_build_join(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
@@ -34,7 +56,6 @@ class TestParseBuild(unittest.TestCase):
         req = nhttp.build_request(msg)
         parsed = nhttp.parse_request(req)
         self.assertEqual(parsed, msg)
-
 
     def test_build_join_accept(self):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
@@ -76,6 +97,26 @@ class TestParseBuild(unittest.TestCase):
         d0 = ncore.NodeDescriptor(host_port="localhost:8000")
         d1 = ncore.NodeDescriptor(host_port="localhost:8001")
         msg = ncore.NewPredecessor(destination=d1, predecessor=d0)
+
+        req = nhttp.build_request(msg)
+        parsed = nhttp.parse_request(req)
+        self.assertEqual(parsed, msg)
+
+    def test_build_new_successor(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.NewSuccessor(destination=d1, successor=d0)
+
+        req = nhttp.build_request(msg)
+
+        self.assertEqual(req.method, "PUT")
+        self.assertEqual(req.path, "/successor")
+        self.assertEqual(req.body, "localhost:8000")
+
+    def test_parse_new_successor(self):
+        d0 = ncore.NodeDescriptor(host_port="localhost:8000")
+        d1 = ncore.NodeDescriptor(host_port="localhost:8001")
+        msg = ncore.NewSuccessor(destination=d1, successor=d0)
 
         req = nhttp.build_request(msg)
         parsed = nhttp.parse_request(req)
