@@ -7,9 +7,10 @@ import logging
 import sys
 import time
 
+logformat = '%(msecs)08.4f %(name)-12s %(levelname)-8s -- %(core)s - %(message)s'
+
 loghandler = logging.StreamHandler(sys.stdout)
-loghandler.setFormatter(logging.Formatter(
-    '%(msecs)03.4f %(name)-12s %(levelname)-8s -- %(core)s - %(message)s'))
+loghandler.setFormatter(logging.Formatter(logformat))
 
 logger = logging.getLogger("node_core")
 logger.setLevel(logging.INFO)
@@ -183,7 +184,7 @@ class NodeCore:
                 return GenericOk([ msg._replace(destination=s) ])
 
         elif isinstance(msg, JoinAccepted):
-            self.logger.debug("JoinAccepted: New successor=%s, predecessor=%s", msg.successor, msg.predecessor)
+            self.logger.info("JoinAccepted: New successor=%s, predecessor=%s", msg.successor, msg.predecessor)
             self.successor = msg.successor
             self.predecessor = msg.predecessor
             self.leader = msg.leader
