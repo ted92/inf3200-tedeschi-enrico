@@ -252,30 +252,33 @@ The leader election with the Bully algorithm is faster than the ring one because
 Even though the Bully algorithm may be faster for what concern the leader election, an implementation with the ring algorithm election was chosen to avoid any changes to the network topology already built. The implementation was more intuitive and the information which each node has to manage are less expensive when there is a join or a leave. Indeed with the Bully algorithm implementation each node need to know informations about every node with an higher ID, so for each join is necessary to involve the whole network, it doesn't matter if the position choose is already the right one; in our implementation instead, the only nodes involved are the neighbours of the node which get the join request and eventually the next nodes if the position requested is not immediately the right one. Is good to take this into consideration because if the network has a very frequent and high variation of number of nodes then is preferred to have a faster implementation of the join and leave than a faster leader election.
 \newline
 If we consider \textbf{fault tolerance} is good to analyse how to act in case of crashes. A simple solution could be implementing for each node a \textit{next\_next node} pointer, which means that if a node $N_i$ can't reach the node $N_{i+1}$ it jumps directly to the $N_{i+2}$ and the $N_{i+1}$ is considered out of the network. The side effect is if two consecutive nodes crash at the same time. Another thing to consider could be if two nodes crash at the same time and one of them was the coordinator. With the \textit{next\_next node} pointer it could be that two nodes realise at the same time that the leader is missing so they both start a new election.
+\newline
+The \textit{join} and \textit{leave} could cause some problems to the network if two or more nodes are added or removed in a really short period of time. The same problem could be raised if during an election there are nodes joining or leaving the network. This could be solved by implementing a \textbf{state machine} in the network. In that way if the network is in the \textit{insert} status won't be possible to insert, remove or start a new election for anyone inside the network until the status is not back in \textit{ready} (Fig \ref{fig:state_machine}). However, we decided that the effort to solve this little issue was not worthy for the purpose of this assignment.  
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{state_machine}
+    \caption{Possible implementation of the State Machine in the network}
+    \label{fig:state_machine}
+\end{figure}
 
 
 \section{Evaluation}
 %TODO: TEST TIME OF ELECTION WITH DIFFERENT NUMBER OF NODES (SCALING). Test also the join time(optional)
 
-For the evaluation node scaling has been considered. The function \textit{storage\_frontend} has been timed sending five hundred requests (GET/PUT) to the nodes network. The evaluation has been done considering the scale on the number of nodes and for each, 10 tests were taken into consideration.
-\newline
-The number of nodes and the average time of 10 computations is represented in the table in Fig \ref{tab:scaling}.
-
+For the evaluation the scaling on the nodes executing the election algorithm has been considered.
+In the Fig \ref{tab:scaling} there are the data collected considering the number of node used in the network and the respectively time to perform the election algorithm. 
 \begin{figure}[h!]
 \centering
 % \renewcommand{\figurename}{Fig.}
-\caption{Nodes/Time scaling table}
+\caption{Time to perform the election algorithm using \textit{n} number of nodes}
 \begin{tabular}[H]{ | l | l | }
 \hline
-	Nodes & Time \\ \hline
-	2 & 5.7923 \\ \hline
-	4 & 6.4793 \\ \hline
-	6 & 8.1309 \\ \hline
-	10 & 13.0746 \\ \hline
-	15 & 17.0469 \\ \hline
-	20 & 19.3472 \\ \hline
-	30 & 29.4729 \\ \hline
-	40 & 35.2886 \\ \hline
+	Nodes & Time(s) \\ \hline
+	2 & 0,003 \\ \hline
+	5 & 0,006 \\ \hline
+	10 & 0,014 \\ \hline
+	15 & 0,021 \\ \hline
+	19 & 0,029 \\ \hline
 \end{tabular}
 \label{tab:scaling}
 \end{figure}
@@ -283,7 +286,12 @@ The number of nodes and the average time of 10 computations is represented in th
 In the Fig \ref{fig:scaling} instead the graphic of this scaling test is characterized.
 
 
-
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{scaling}
+    \caption{The election algorithm time (y axis) with the relative number of node active in the network (x axis)}
+    \label{fig:scaling}
+\end{figure}
 
 \section{Conclusion}
 
