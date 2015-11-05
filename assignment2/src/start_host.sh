@@ -8,6 +8,8 @@ JOIN_HOST_PORT="$3"
 COUNT="$4"
 
 NODE_SCRIPT="$(pwd)/node2_http.py"
+VERBOSE_FLAGS=""
+#VERBOSE_FLAGS="-v"
 LOG_FILE="$(pwd)/tmp_shared_log.txt"
 HOSTS_FILE="$(pwd)/tmp_running_hosts.txt"
 
@@ -46,8 +48,10 @@ do
     (
         set -x
         ssh "$HOST" \
-            python "$NODE_SCRIPT" -v $HOST:$p $JOIN_FLAGS \
+            python "$NODE_SCRIPT" $VERBOSE_FLAGS $HOST:$p $JOIN_FLAGS \
             2>&1 >> "$LOG_FILE" &
+        sleep 1
+        curl -X POST http://$HOST:$p/election
         sleep 1
     )
 done
