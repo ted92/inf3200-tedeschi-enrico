@@ -376,7 +376,7 @@ if __name__ == '__main__':
     server_node_core = ncore.NodeCore(descriptor)
 
     # Start the webserver which handles incomming requests
-    logger.debug("Starting HTTP server: %s, %s" % (descriptor, descriptor.rank))
+    logger.info("Starting HTTP server: %s, %s" % (descriptor, descriptor.rank))
     httpd = NodeServer((descriptor.host, descriptor.port), HttpRequestHandler)
     server_thread = threading.Thread(target = httpd.serve)
     server_thread.daemon = True
@@ -387,10 +387,11 @@ if __name__ == '__main__':
     message_queue.start()
 
     def handler(signum, frame):
-        logger.debug("Caught signal %d, stopping http server..." % signum)
+        logger.info("Caught signal %d, stopping http server..." % signum)
         httpd.stop()
         message_queue.stop()
     signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGTERM, handler)
 
     # Join network
     if join_descriptor:
