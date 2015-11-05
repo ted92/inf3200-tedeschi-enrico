@@ -80,5 +80,7 @@ test_election() {
 }
 
 test_join
+sleep 2
 test_benchmark_tool
+sleep 2
 test_election
