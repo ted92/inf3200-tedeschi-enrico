@@ -22,7 +22,7 @@ test_join() {
         curl -vX GET http://localhost:8001/getCurrentLeader
         curl -vX GET http://localhost:8002/getCurrentLeader
         sleep 1
-        kill $(jobs -p)
+        kill -9 $(jobs -p)
     )
 }
 
@@ -46,7 +46,7 @@ test_benchmark_tool() {
         sleep 1
         python -u leader_benchmark.py --ip localhost --port 8000
         sleep 1
-        kill $(jobs -p)
+        kill -9 $(jobs -p)
     )
 }
 
@@ -75,7 +75,7 @@ test_election() {
             sleep 1
         done
 
-        kill $(jobs -p)
+        kill -9 $(jobs -p)
     )
 }
 
