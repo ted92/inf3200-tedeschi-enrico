@@ -408,6 +408,28 @@ class TestNodeCore(unittest.TestCase):
         newleader = n1.leader
         self.assertNotEqual(newleader, leader)
 
+    def test_shutdown_down_to_one(self):
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+
+        reactor = NodeReactor(n0, n1)
+
+        msg = ncore.Shutdown(destination=d1)
+        reactor.send_msg(msg)
+
+        self.assertEqual(n0.successor, None)
+        self.assertEqual(n0.predecessor, None)
+        self.assertEqual(n0.leader, d0)
+
+    def test_shutdown_last_node(self):
+        ncore.logger.setLevel(logging.DEBUG)
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+
+        msg = ncore.Shutdown(destination=d0)
+        result = n0.handle_message(msg)
+
+        self.assertEqual(result, ncore.GenericOk())
+
 
 class NodeReactor:
     """ Simulated network of nodes that automatically propagates messages

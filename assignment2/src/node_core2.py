@@ -199,6 +199,13 @@ class NodeCore:
         elif isinstance(msg, NewPredecessor):
             self.logger.debug("NewPredecessor: %s", msg.predecessor)
             self.predecessor = msg.predecessor
+
+            if msg.predecessor == self.descriptor:
+                self.logger.info("Told to set self as predecessor. I must be the only node neft.")
+                self.predecessor = None
+                self.successor = None
+                self.leader = self.descriptor
+
             return GenericOk()
 
         elif isinstance(msg, NewSuccessor):
@@ -206,7 +213,14 @@ class NodeCore:
             previous_successor = self.successor
             self.successor = msg.successor
 
-            if previous_successor == self.leader:
+            if msg.successor == self.descriptor:
+                self.logger.info("Told to set self as successor. I must be the only node neft.")
+                self.predecessor = None
+                self.successor = None
+                self.leader = self.descriptor
+                return GenericOk()
+
+            elif previous_successor == self.leader:
                 # NewSuccessor message is only sent when successor shutting down.
                 self.logger.info("Previous leader shutting down: telling new successor (%s) to call for election", self.successor)
                 return GenericOk(new_messages=[
@@ -274,11 +288,15 @@ class NodeCore:
         elif isinstance(msg, Shutdown):
             s = self.successor
             p = self.predecessor
-            self.logger.info("Shutdown: telling predecessor (%s) and successor (%s) to talk to talk amongst themselves", p,s)
-            return GenericOk(new_messages=[
-                NewPredecessor(destination=s, predecessor=p),
-                NewSuccessor(destination=p, successor=s)
-                ])
+            if s:
+                self.logger.info("Shutdown: telling predecessor (%s) and successor (%s) to talk to talk amongst themselves", p,s)
+                return GenericOk(new_messages=[
+                    NewPredecessor(destination=s, predecessor=p),
+                    NewSuccessor(destination=p, successor=s)
+                    ])
+            else:
+                self.logger.info("Shutdown: last node")
+                return GenericOk()
 
         else:
             raise RuntimeError("Unknown message: %s" % (msg,))
