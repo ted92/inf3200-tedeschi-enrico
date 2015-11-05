@@ -380,6 +380,19 @@ class TestNodeCore(unittest.TestCase):
         self.assertEqual(n1.leader, d1)
         self.assertEqual(n2.leader, d1)
 
+    def test_shutdown(self):
+        ncore.logger.setLevel(logging.DEBUG)
+        d0 = node_ranked(0);    n0 = ncore.NodeCore(d0)
+        d1 = node_ranked(1);    n1 = ncore.NodeCore(d1)
+        d2 = node_ranked(2);    n2 = ncore.NodeCore(d2)
+
+        reactor = NodeReactor(n0, n1, n2)
+
+        msg = ncore.Shutdown(destination=d1)
+        reactor.send_msg(msg)
+
+        self.assertEqual(n0.successor, d2)
+        self.assertEqual(n2.predecessor, d0)
 
 
 class NodeReactor:

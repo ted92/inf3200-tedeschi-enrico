@@ -67,6 +67,9 @@ JoinAccepted.__new__.__defaults__ = (None, None, None, None)
 NewPredecessor = collections.namedtuple("NewPredecessor",
         ["destination", "predecessor"])
 
+NewSuccessor = collections.namedtuple("NewSuccessor",
+        ["destination", "successor"])
+
 Election = collections.namedtuple("Election",
         ["destination", "participants"])
 Election.__new__.__defaults__ = (None, [])
@@ -80,6 +83,8 @@ GetNeighbors = collections.namedtuple("GetNeighbors",
 GetLeader = collections.namedtuple("GetLeader",
         ["destination"])
 
+Shutdown = collections.namedtuple("Shutdown",
+        ["destination"])
 
 # Direct Node Responses
 # All direct responses should have a 'new_messages' field
@@ -195,6 +200,11 @@ class NodeCore:
             self.predecessor = msg.predecessor
             return GenericOk()
 
+        elif isinstance(msg, NewSuccessor):
+            self.logger.debug("NewSuccessor: %s", msg.successor)
+            self.successor = msg.successor
+            return GenericOk()
+
         elif isinstance(msg, Election):
             if self.successor == None:
                 # Single node. You are already the leader. No one else to elect.
@@ -250,6 +260,15 @@ class NodeCore:
 
         elif isinstance(msg, GetLeader):
             return NodeList(nodes=[self.leader])
+
+        elif isinstance(msg, Shutdown):
+            s = self.successor
+            p = self.predecessor
+            self.logger.info("Shutdown: telling predecessor (%s) and successor (%s) to talk to talk amongst themselves", p,s)
+            return GenericOk(new_messages=[
+                NewPredecessor(destination=s, predecessor=p),
+                NewSuccessor(destination=p, successor=s)
+                ])
 
         else:
             raise RuntimeError("Unknown message: %s" % (msg,))
