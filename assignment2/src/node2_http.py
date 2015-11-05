@@ -7,13 +7,14 @@ import collections
 import httplib
 import logging
 import signal
+import sys
 import threading
 
 import node_core2 as ncore
 
 # Logging Setup
 
-loghandler = logging.StreamHandler()
+loghandler = logging.StreamHandler(sys.stdout)
 loghandler.setFormatter(logging.Formatter(
     '%(msecs)03.4f %(name)-12s %(levelname)-8s -- %(core)s - %(message)s'))
 
